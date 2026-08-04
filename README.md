@@ -19,7 +19,7 @@ simulation + theoretical recursion.
 | A1 Error Confinement Live Demo | `qnfo-demo-error-confinement` | ✅ LIVE |
 | A2 Q-PNA Classifier Playground | `qnfo-demo-qpna-classifier` | ✅ LIVE |
 | A3 Ultrametric Convergence Explorer | `qnfo-demo-ultrametric-convergence` | ✅ LIVE |
-| A4 Tree Distance Sandbox | — | 📋 planned |
-| A5 Hardware Pathway Visualizer | — | 📋 planned |
+| A4 Tree Distance Sandbox | `qnfo-demo-tree-distance` | ✅ LIVE |
+| A5 Hardware Pathway Visualizer | `qnfo-demo-hardware-visualizer` | ✅ LIVE |
 
 *Generated with DeepChat | All page content is AI-generated and for reference only.*
