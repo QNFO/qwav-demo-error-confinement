@@ -17,8 +17,8 @@ simulation + theoretical recursion.
 | Artifact | Repo | Status |
 |:---------|:-----|:-------|
 | A1 Error Confinement Live Demo | `qnfo-demo-error-confinement` | ✅ LIVE |
-| A2 Q-PNA Classifier Playground | `qnfo-demo-qpna-classifier` | 📋 planned |
-| A3 Ultrametric Convergence Explorer | — | 📋 planned |
+| A2 Q-PNA Classifier Playground | `qnfo-demo-qpna-classifier` | ✅ LIVE |
+| A3 Ultrametric Convergence Explorer | `qnfo-demo-ultrametric-convergence` | ✅ LIVE |
 | A4 Tree Distance Sandbox | — | 📋 planned |
 | A5 Hardware Pathway Visualizer | — | 📋 planned |
 
