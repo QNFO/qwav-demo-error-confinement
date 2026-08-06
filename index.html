@@ -3,324 +3,304 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Error Confinement — Live Demo</title>
+<title>Error Confinement — Bruhat-Tits Error Suppression Demo</title>
 <style>
   :root {
-    --ink: #050810;
-    --ink-2: #0a101f;
-    --panel: #0d1526;
-    --line: #1c2b4a;
-    --line-2: #2a3f6e;
-    --text: #d8e4ff;
-    --text-dim: #7d93bf;
-    --cyan: #00e5ff;
-    --cyan-dim: #0a9ab8;
-    --amber: #ffb300;
-    --green: #00ffa3;
-    --red: #ff3b5c;
-    --mono: "Cascadia Code", "Consolas", "SFMono-Regular", monospace;
-    --ui: "Bahnschrift", "Segoe UI", "Arial Narrow", sans-serif;
+    --ink: #07080f; --ink-2: #0b0f1c; --panel: #0e1425; --line: #1d2a46;
+    --line-2: #2b3d6b; --text: #dce6ff; --text-dim: #8295c0;
+    --cyan: #00e5ff; --amber: #ffb300; --ember: #ff5e3a; --ice: #7dd8ff;
+    --green: #00ffa3; --violet: #b388ff;
+    --mono: "Cascadia Code","Consolas","SFMono-Regular",monospace;
+    --ui: "Bahnschrift","Segoe UI","Arial Narrow",sans-serif;
+    --radius: 8px; --radius-sm: 5px;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background:
-      radial-gradient(1200px 600px at 70% -10%, rgba(0,229,255,0.07), transparent 60%),
-      radial-gradient(900px 500px at 10% 110%, rgba(0,255,163,0.05), transparent 55%),
-      var(--ink);
-    color: var(--text);
-    font-family: var(--ui);
-    min-height: 100vh;
-    overflow-x: hidden;
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:radial-gradient(1100px 560px at 72% -12%,rgba(0,229,255,0.06),transparent 60%),
+               radial-gradient(800px 480px at 8% 112%,rgba(255,59,92,0.04),transparent 55%),var(--ink);
+    color:var(--text);font-family:var(--ui);min-height:100vh;overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
   }
-  body::before {
-    content: "";
-    position: fixed; inset: 0;
-    pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    opacity: 0.5;
+  .wrap{max-width:1340px;margin:0 auto;padding:20px 24px 40px}
+  
+  /* Header */
+  .header{padding:18px 0 10px;border-bottom:1px solid var(--line);margin-bottom:18px}
+  .header h1{font-family:var(--mono);font-size:1.35rem;font-weight:600;color:var(--cyan);letter-spacing:-0.01em}
+  .header .tagline{font-size:0.85rem;color:var(--text-dim);margin-top:4px}
+  
+  /* Layout */
+  .grid{display:grid;grid-template-columns:280px 1fr 300px;gap:18px;align-items:start}
+  @media(max-width:1100px){.grid{grid-template-columns:1fr}}
+  
+  /* Panels */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;position:relative}
+  .panel h2{font-family:var(--mono);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+
+  /* Buttons */
+  .seg{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+  .seg button{
+    background:var(--ink-2);border:1px solid var(--line);color:var(--text-dim);
+    font-family:var(--mono);font-size:0.78rem;padding:6px 12px;border-radius:var(--radius-sm);
+    cursor:pointer;transition:all 0.15s;min-width:36px;text-align:center;
   }
-  .wrap { max-width: 1280px; margin: 0 auto; padding: 24px 28px 60px; position: relative; }
+  .seg button:hover{color:var(--text);border-color:var(--line-2);background:rgba(0,229,255,0.06)}
+  .seg button.active{background:rgba(0,229,255,0.12);color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 8px rgba(0,229,255,0.15)}
+  .seg button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 
-  /* ---------- Header ---------- */
-  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding: 12px 0 26px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  .kicker { font-family: var(--mono); font-size: 12px; letter-spacing: 0.35em; color: var(--cyan); text-transform: uppercase; }
-  h1 { font-size: clamp(26px, 4vw, 44px); font-weight: 500; letter-spacing: 0.01em; margin-top: 6px; line-height: 1.05; }
-  h1 .hl { color: var(--cyan); font-weight: 700; }
-  .sub { color: var(--text-dim); font-size: 14px; margin-top: 8px; max-width: 620px; line-height: 1.5; }
-  .badge { font-family: var(--mono); font-size: 11px; color: var(--green); border: 1px solid rgba(0,255,163,0.35); padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  /* Slider */
+  .slider-group{margin:8px 0}
+  .slider-group label{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-dim);margin-bottom:4px}
+  .slider-group label span{color:var(--cyan);font-family:var(--mono)}
+  .slider-group input[type=range]{width:100%;accent-color:var(--cyan)}
+  .slider-group .ticks{display:flex;justify-content:space-between;font-size:0.65rem;color:var(--text-dim);padding:0 2px}
 
-  /* ---------- Layout ---------- */
-  .stage { display: grid; grid-template-columns: 300px 1fr; gap: 18px; margin-top: 22px; }
-  @media (max-width: 900px) { .stage { grid-template-columns: 1fr; } }
+  /* Readouts */
+  .readout-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid rgba(29,42,70,0.5)}
+  .readout-row:last-child{border-bottom:none}
+  .readout-label{font-size:0.75rem;color:var(--text-dim)}
+  .readout-val{font-family:var(--mono);font-size:0.85rem;color:var(--text)}
+  .readout-val.cyan{color:var(--cyan)}
+  .readout-val.amber{color:var(--amber)}
+  .readout-val.big{font-size:1.2rem;font-weight:600}
+  .readout-unit{font-size:0.65rem;color:var(--text-dim);margin-left:3px}
 
-  /* ---------- Control panel ---------- */
-  .panel { background: linear-gradient(180deg, var(--panel), var(--ink-2)); border: 1px solid var(--line); border-radius: 12px; padding: 20px; height: fit-content; }
-  .panel h3 { font-size: 12px; letter-spacing: 0.25em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 14px; }
-  .ctl { margin-bottom: 20px; }
-  .ctl label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: var(--text); }
-  .ctl .val { font-family: var(--mono); color: var(--cyan); }
-  input[type="range"] { -webkit-appearance: none; width: 100%; height: 4px; background: var(--line-2); border-radius: 4px; outline: none; }
-  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--cyan); border: 2px solid var(--ink); cursor: pointer; box-shadow: 0 0 12px rgba(0,229,255,0.6); }
-  .seg { display: flex; gap: 8px; flex-wrap: wrap; }
-  .seg button { flex: 1; min-width: 44px; background: var(--ink-2); color: var(--text-dim); border: 1px solid var(--line-2); border-radius: 8px; padding: 10px 6px; font-family: var(--mono); font-size: 14px; cursor: pointer; transition: all 0.15s; }
-  .seg button:hover { border-color: var(--cyan); color: var(--cyan); }
-  .seg button.active { background: rgba(0,229,255,0.14); border-color: var(--cyan); color: var(--cyan); box-shadow: inset 0 0 18px rgba(0,229,255,0.1); }
-  .run-btn { width: 100%; margin-top: 8px; background: linear-gradient(135deg, var(--cyan), var(--cyan-dim)); color: var(--ink); border: none; border-radius: 10px; padding: 14px; font-family: var(--ui); font-weight: 700; font-size: 15px; letter-spacing: 0.08em; cursor: pointer; text-transform: uppercase; transition: transform 0.1s, box-shadow 0.2s; }
-  .run-btn:hover { box-shadow: 0 0 28px rgba(0,229,255,0.4); transform: translateY(-1px); }
-  .run-btn:active { transform: translateY(1px); }
-  .run-btn.running { opacity: 0.6; pointer-events: none; }
-  .mode-note { margin-top: 16px; font-size: 12px; color: var(--text-dim); line-height: 1.5; border-top: 1px solid var(--line); padding-top: 14px; }
+  /* Canvas area */
+  .canvas-panel canvas{width:100%;display:block;border-radius:4px}
+  
+  /* Formula panel */
+  .formula-box{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;font-family:var(--mono);font-size:0.75rem;color:var(--text-dim);line-height:1.7;margin-top:10px}
+  .formula-box .eq{color:var(--cyan)}
+  .formula-box .var{color:var(--amber)}
+  .formula-box .comment{color:var(--text-dim);opacity:0.6}
 
-  /* ---------- Demo canvas ---------- */
-  .demo { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; position: relative; min-height: 520px; display: flex; flex-direction: column; }
-  .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); background: rgba(10,16,31,0.8); }
-  .toolbar .t-label { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.2em; text-transform: uppercase; }
-  .toolbar .t-status { font-family: var(--mono); font-size: 11px; }
-  #tree { width: 100%; flex: 1; display: block; cursor: crosshair; background: radial-gradient(700px 400px at 50% 20%, rgba(0,229,255,0.05), transparent 60%); }
-  .overlay-note { position: absolute; left: 14px; bottom: 14px; font-family: var(--mono); font-size: 11px; color: var(--text-dim); background: rgba(5,8,16,0.75); border: 1px solid var(--line); padding: 6px 10px; border-radius: 6px; pointer-events: none; }
+  /* Action bar */
+  .action-bar{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+  .action-bar button{
+    background:var(--ink-2);border:1px solid var(--line);color:var(--text-dim);
+    font-family:var(--ui);font-size:0.73rem;padding:5px 10px;border-radius:var(--radius-sm);
+    cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:4px
+  }
+  .action-bar button:hover{color:var(--text);border-color:var(--line-2)}
+  .action-bar button.primary{background:rgba(0,229,255,0.1);color:var(--cyan);border-color:var(--cyan)}
+  .action-bar button:disabled{opacity:0.4;cursor:not-allowed}
 
-  /* ---------- Readout / chart row ---------- */
-  .readouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 18px; }
-  .readout { background: linear-gradient(180deg, var(--panel), var(--ink-2)); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
-  .readout .r-label { font-size: 11px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; }
-  .readout .r-value { font-family: var(--mono); font-size: 22px; margin-top: 6px; color: var(--cyan); word-break: break-all; }
-  .readout .r-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
-  .readout.hot .r-value { color: var(--amber); }
-  .readout.good .r-value { color: var(--green); }
+  /* Tour overlay */
+  .tour-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s}
+  .tour-overlay.active{opacity:1;pointer-events:all}
+  .tour-card{background:var(--panel);border:1px solid var(--cyan);border-radius:var(--radius);padding:24px 28px;max-width:420px;text-align:center;box-shadow:0 0 40px rgba(0,229,255,0.15)}
+  .tour-card h3{font-family:var(--mono);color:var(--cyan);font-size:1rem;margin-bottom:8px}
+  .tour-card p{color:var(--text-dim);font-size:0.85rem;line-height:1.5;margin-bottom:16px}
+  .tour-card .step-dots{display:flex;justify-content:center;gap:6px;margin-bottom:14px}
+  .tour-card .step-dot{width:6px;height:6px;border-radius:50%;background:var(--line-2);transition:all 0.2s}
+  .tour-card .step-dot.active{background:var(--cyan);box-shadow:0 0 6px rgba(0,229,255,0.4)}
+  .tour-card button{background:var(--cyan);border:none;color:var(--ink);font-family:var(--ui);font-size:0.82rem;padding:8px 24px;border-radius:var(--radius-sm);cursor:pointer;font-weight:600}
+  .tour-card button:hover{box-shadow:0 0 16px rgba(0,229,255,0.3)}
+  .tour-card .skip{background:none;color:var(--text-dim);border:none;margin-left:10px;font-size:0.75rem;cursor:pointer}
 
-  .charts { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-top: 18px; }
-  @media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
-  .card { background: linear-gradient(180deg, var(--panel), var(--ink-2)); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
-  .card h4 { font-size: 12px; letter-spacing: 0.25em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 12px; }
-  canvas.plt { width: 100%; height: 240px; display: block; }
+  /* Toast */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--panel);border:1px solid var(--green);color:var(--green);padding:10px 18px;border-radius:var(--radius-sm);font-family:var(--mono);font-size:0.73rem;z-index:200;opacity:0;transform:translateY(20px);transition:all 0.3s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateY(0)}
 
-  /* ---------- Explain ---------- */
-  .explain { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-  @media (max-width: 900px) { .explain { grid-template-columns: 1fr; } }
-  .explain .card p { font-size: 14px; line-height: 1.65; color: var(--text); }
-  .explain .card .term { color: var(--cyan); font-family: var(--mono); font-size: 13px; }
-  .explain .card .math { display: block; font-family: var(--mono); font-size: 13px; color: var(--amber); background: rgba(255,179,0,0.06); border: 1px solid rgba(255,179,0,0.18); border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
-  footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--text-dim); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  footer a { color: var(--cyan); text-decoration: none; }
-  .fn { font-size: 11px; color: var(--text-dim); line-height: 1.6; margin-top: 16px; }
+  /* Spinner */
+  .spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--line-2);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:4px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Seed input */
+  .seed-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+  .seed-row input{background:var(--ink-2);border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:0.73rem;padding:4px 8px;border-radius:var(--radius-sm);width:80px}
+  .seed-row input:focus{outline:none;border-color:var(--cyan)}
+  .seed-row label{font-size:0.7rem;color:var(--text-dim)}
+  
+  /* Footer */
+  .footer{margin-top:20px;padding-top:12px;border-top:1px solid var(--line);font-size:0.65rem;color:var(--text-dim);text-align:center}
+  .footer a{color:var(--cyan);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div>
-      <div class="kicker">QWAV · Interactive Artifact A1</div>
-      <h1>Error <span class="hl">Confinement</span> — Live Demo</h1>
-      <p class="sub">An interactive Bruhat-Tits tree. Move the physical error-rate slider, choose a tree depth and a prime, and watch the logical error rate collapse as the strong triangle inequality confines errors to their subtrees.</p>
-    </div>
-    <div class="badge">LIVE · p-adic tree code</div>
-  </header>
 
-  <div class="stage">
-    <!-- Controls -->
-    <aside class="panel">
-      <h3>Experiment Controls</h3>
-      <div class="ctl">
-        <label>Physical error rate <span class="val" id="epsVal">1.0%</span></label>
-        <input type="range" id="eps" min="0.1" max="50" step="0.1" value="1.0">
-      </div>
-      <div class="ctl">
-        <label>Prime p (branching) <span class="val" id="pVal">3</span></label>
-        <div class="seg" id="pSeg">
-          <button data-p="2">p=2</button>
-          <button data-p="3" class="active">p=3</button>
-          <button data-p="5">p=5</button>
-        </div>
-      </div>
-      <div class="ctl">
-        <label>Tree depth d <span class="val" id="dVal">5</span></label>
-        <div class="seg" id="dSeg">
-          <button data-d="2">2</button>
-          <button data-d="3">3</button>
-          <button data-d="4">4</button>
-          <button data-d="5" class="active">5</button>
-          <button data-d="6">6</button>
-          <button data-d="7">7</button>
-        </div>
-      </div>
-      <button class="run-btn" id="runBtn">Run Simulation</button>
-      <div class="mode-note">
-        <strong>Decoding:</strong> bottom-up majority vote per block of p children (repetition-style tree encoding — the pedagogical analog of concatenated-tree error confinement). Errors on a leaf only corrupt its own subtree; the ultrametric ball structure keeps sibling branches clean.
-      </div>
-    </aside>
-
-    <!-- Tree canvas -->
-    <section class="demo">
-      <div class="toolbar">
-        <span class="t-label">Bruhat–Tits tree · ℚ<sub>p</sub></span>
-        <span class="t-status" id="treeStatus">hover / click a subtree to inspect</span>
-      </div>
-      <canvas id="tree"></canvas>
-      <div class="overlay-note" id="overlayNote">dragging the slider recomputes instantly</div>
-    </section>
-  </div>
-
-  <!-- Readouts -->
-  <div class="readouts">
-    <div class="readout good">
-      <div class="r-label">Logical error rate (L<sub>d</sub>)</div>
-      <div class="r-value" id="lerVal">—</div>
-      <div class="r-sub">theoretical, full depth recursion</div>
-    </div>
-    <div class="readout" id="measBox">
-      <div class="r-label">Measured LER (Monte Carlo)</div>
-      <div class="r-value" id="measVal">—</div>
-      <div class="r-sub" id="measSub">run N trials</div>
-    </div>
-    <div class="readout">
-      <div class="r-label">Error suppression factor</div>
-      <div class="r-value" id="suppVal">—</div>
-      <div class="r-sub">vs. uncoded single level</div>
-    </div>
-    <div class="readout hot">
-      <div class="r-label">Physical ε</div>
-      <div class="r-value" id="physVal">1.0%</div>
-      <div class="r-sub">per-edge failure probability</div>
-    </div>
-  </div>
-
-  <!-- Charts -->
-  <div class="charts">
-    <div class="card">
-      <h4>Logical error rate vs. depth (log scale)</h4>
-      <canvas class="plt" id="curveChart"></canvas>
-    </div>
-    <div class="card">
-      <h4>Error confinement map</h4>
-      <canvas class="plt" id="ballChart"></canvas>
-      <p style="font-size:12px;color:var(--text-dim);margin-top:8px;line-height:1.5;">The strong triangle inequality: any two p-adic balls are either disjoint or nested. Errors in one branch can never leak into a disjoint sibling branch — the definition of confinement.</p>
-    </div>
-  </div>
-
-  <!-- Explain -->
-  <div class="explain">
-    <div class="card">
-      <h4>Why the curve falls so fast</h4>
-      <p>
-        At every level, a block of <span class="term">p</span> children is protected by a majority vote
-        (the repetition-code limit of a concatenated tree code). A level with block error rate
-        <span class="term">ε</span> produces a next-level error rate approximately:
-      </p>
-      <span class="math">ε<sub>k+1</sub> ≈ Σ<sub>j &gt; ⌊p/2⌋</sub> C(p,j) · ε<sub>k</sub><sup>j</sup> · (1−ε<sub>k</sub>)<sup>p−j</sup></span>
-      <p>
-        Because <span class="term">ε<sub>k</sub></span> is tiny, each level squares the suppression.
-        At ε = 1%, p = 3, depth 7, the logical rate is astronomically small — the "zero errors at depth 7"
-        you can now make visible yourself. The strong triangle inequality is what guarantees the recursion
-        is valid: errors do not mix across disjoint balls.
-      </p>
-    </div>
-    <div class="card">
-      <h4>What you're seeing</h4>
-      <p>
-        <span class="term">Bruhat–Tits tree:</span> the boundary of this p-ary tree is the p-adic number
-        line ℚ<sub>p</sub>; nodes are balls, edges are inclusions. Adjusting <span class="term">p</span> changes
-        the branching of the ultrametric space; adjusting <span class="term">d</span> changes concatenation depth.
-      </p>
-      <p style="margin-top:10px;">
-        <span class="term">Error confinement:</span> a leaf error (red flash) contaminates its own ball, but
-        the ball is <em>isolated</em> — siblings remain clean. The confinement map on the right shows this
-        visually: pick any subtree, and its disjoint neighbors never inherit its errors.
-      </p>
-      <p style="margin-top:10px;color:var(--text-dim);font-size:13px;">
-        Model transparency: this demo uses a majority-vote repetition encoding — the cleanest pedagogical
-        analog of concatenated-tree error confinement. It is not a claim about physical hardware.†
-      </p>
-    </div>
-  </div>
-
-  <footer>
-    <span>QWAV Error Confinement Live Demo · Strategy 3.0 · Artifact A1</span>
-    <span>Generated with <a href="https://github.com/ThinkInAIXYZ/deepchat">DeepChat</a> | All page content is AI-generated and for reference only</span>
-  </footer>
-  <p class="fn">† Design target / pedagogical model: demonstrates the strong-triangle-inequality error-suppression mechanism using a repetition-style tree code. Not yet demonstrated in physical hardware. See QWAV Computational Validation (Tier 0) and Symmetric Extension (Tier 1) for the underlying publications.</p>
+<div class="header">
+  <h1>Error Confinement — Bruhat-Tits Error Suppression</h1>
+  <div class="tagline">Watch physical error rates collapse into negligible logical error rates through ultrametric tree geometry</div>
 </div>
+
+<div class="grid">
+  <!-- LEFT PANEL: Controls + Readouts -->
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="panel" id="controlsPanel">
+      <h2>Parameters</h2>
+
+      <div class="slider-group">
+        <label>Physical Error Rate <span id="epsLabel">ε = 1.0%</span></label>
+        <input type="range" id="epsSlider" min="0" max="100" value="1" step="1">
+        <div class="ticks"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+      </div>
+
+      <label style="font-size:0.7rem;color:var(--text-dim);margin:8px 0 4px;display:block">Prime (p)</label>
+      <div class="seg" id="pSeg">
+        <button data-p="2">p = 2</button>
+        <button data-p="3" class="active">p = 3</button>
+        <button data-p="5">p = 5</button>
+      </div>
+
+      <label style="font-size:0.7rem;color:var(--text-dim);margin:8px 0 4px;display:block">Tree Depth (d)</label>
+      <div class="seg" id="dSeg">
+        <button data-d="2">2</button>
+        <button data-d="3">3</button>
+        <button data-d="4">4</button>
+        <button data-d="5" class="active">5</button>
+        <button data-d="6">6</button>
+        <button data-d="7">7</button>
+      </div>
+
+      <div class="action-bar">
+        <button id="runSimBtn" class="primary" title="Run Monte Carlo simulation">▶ Run Simulation</button>
+        <button id="resetBtn" title="Reset to defaults">↺ Reset</button>
+        <button id="verifyBtn" title="Run mathematical verification">✓ Verify Math</button>
+      </div>
+    </div>
+
+    <!-- Readouts -->
+    <div class="panel" id="readoutPanel">
+      <h2>Results</h2>
+      <div class="readout-row">
+        <span class="readout-label">Logical Error Rate (theoretical)</span>
+        <span><span class="readout-val cyan big" id="theoVal">—</span></span>
+      </div>
+      <div class="readout-row">
+        <span class="readout-label">Logical Error Rate (Monte Carlo)</span>
+        <span><span class="readout-val amber big" id="simVal">—</span><span class="readout-unit" id="simUnit"></span></span>
+      </div>
+      <div class="readout-row">
+        <span class="readout-label">Suppression Factor</span>
+        <span><span class="readout-val" id="suppVal">—</span></span>
+      </div>
+      <div class="readout-row">
+        <span class="readout-label">MC Trials</span>
+        <span><span class="readout-val" id="trialsVal">10,000</span></span>
+      </div>
+
+      <!-- Formula -->
+      <div class="formula-box">
+        <div class="eq">LER = f<sup>d</sup>(ε)</div>
+        <div class="comment">where <span class="var">f(ε) = Σ<sub>j=⌊p/2⌋+1</sub><sup>p</sup> C(p,j)·ε<sup>j</sup>·(1−ε)<sup>p−j</sup></span></div>
+        <div class="comment" style="margin-top:3px">Majority vote: parent bad if &gt;⌊p/2⌋ children bad</div>
+      </div>
+
+      <!-- Reproducibility -->
+      <div class="seed-row" style="margin-top:10px">
+        <label>Seed:</label>
+        <input type="number" id="seedInput" value="42" min="0" max="2147483647" title="PRNG seed for deterministic Monte Carlo">
+        <button id="reseedBtn" style="font-size:0.65rem;padding:3px 8px">Reseed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: Tree visualization canvas -->
+  <div class="panel canvas-panel" style="min-height:500px">
+    <h2>Bruhat-Tits Tree</h2>
+    <canvas id="treeCanvas"></canvas>
+  </div>
+
+  <!-- RIGHT: Chart + Collapse -->
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="panel canvas-panel">
+      <h2>Error Rate vs. Depth</h2>
+      <canvas id="chartCanvas"></canvas>
+    </div>
+    <div class="panel">
+      <h2>Collapse Animation</h2>
+      <button id="animBtn" style="width:100%;padding:8px;background:rgba(0,229,255,0.08);border:1px solid var(--line);color:var(--cyan);font-family:var(--ui);font-size:0.78rem;border-radius:var(--radius-sm);cursor:pointer">
+        ▶ Run Collapse
+      </button>
+      <div style="margin-top:8px;font-size:0.7rem;color:var(--text-dim);line-height:1.5">
+        Watch how errors are suppressed as we move up the tree. Each level applies a majority vote — errors that survive at depth <span style="color:var(--cyan)">d</span> become the logical error rate.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  QWAV Artifact A1 — <a href="https://github.com/QNFO/qwav-demo-error-confinement">Source</a> |
+  <a href="https://github.com/QNFO/QWAV">QWAV Research Programme</a> |
+  Built with <a href="#" id="tourTrigger">qwav-demo-kit</a> v1.0
+</div>
+</div>
+
+<!-- Tour Overlay -->
+<div class="tour-overlay" id="tourOverlay">
+  <div class="tour-card">
+    <h3 id="tourTitle">Welcome!</h3>
+    <p id="tourBody"></p>
+    <div class="step-dots" id="tourDots"></div>
+    <button id="tourNext">Next →</button>
+    <button class="skip" id="tourSkip">Skip tour</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script>
 "use strict";
-/* ============ STATE ============ */
-const S = {
-  eps: 0.01,      // physical error rate
-  p: 3,           // branching
-  d: 5,           // depth
-  running: false,
-  sim: null,      // {ler, trials, failures}
-  hover: null,    // {depth, index}
-  sel: null       // {depth, index}
-};
 
-/* ============ CANVAS SETUP ============ */
-const treeCv = document.getElementById("tree");
-const tctx = treeCv.getContext("2d");
-const curveCv = document.getElementById("curveChart");
-const ccx = curveCv.getContext("2d");
-const ballCv = document.getElementById("ballChart");
-const bcx = ballCv.getContext("2d");
-
-function fitCanvas(cv, ctx) {
-  const r = cv.getBoundingClientRect();
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const w = Math.max(200, Math.floor(r.width));
-  const h = Math.max(200, Math.floor(r.height));
-  if (cv.width !== w * dpr || cv.height !== h * dpr) {
-    cv.width = w * dpr;
-    cv.height = h * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
-  return { w, h };
+/* ═══════ SEEDED PRNG (mulberry32) ═══════ */
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
 }
+let rng = mulberry32(42);
 
-/* ============ TREE MODEL ============ */
+/* ═══════ STATE ═══════ */
+const S = { eps: 0.01, p: 3, d: 5, seed: 42, running: false, sim: null, nodeCount: 0, maxLeaves: 0 };
+
+/* ═══════ TREE LAYOUT ═══════ */
 function treeLayout(p, d) {
-  const nodes = [];
-  const root = { depth: 0, index: 0, parent: null, children: [] };
+  const nodes = []; let nextId = 0;
+  const root = { depth: 0, index: nextId++, parent: null, children: [], leaf: d===0 };
   nodes.push(root);
-  function build(node, depth, slot) {
-    if (depth >= d) return;
-    node.children = [];
+  (function build(node, depth) {
+    if (depth >= d) { node.leaf = true; return; }
+    node.leaf = false;
     for (let k = 0; k < p; k++) {
-      const child = { depth: depth + 1, index: nodes.length, parent: node, children: [], slot: slot * p + k, leaf: depth + 1 === d };
-      nodes.push(child);
-      node.children.push(child);
-      build(child, depth + 1, child.slot);
+      const child = { depth: depth+1, index: nextId++, parent: node, children: [], leaf: depth+1===d };
+      nodes.push(child); node.children.push(child);
+      build(child, depth+1);
     }
-  }
-  build(root, 0, 0);
+  })(root, 0);
   const leaves = nodes.filter(n => n.leaf);
-  const total = Math.max(1, leaves.length);
-  nodes.forEach(n => {
-    if (n.leaf) {
-      n.x = (n.slot + 0.5) / total;
-    }
-  });
-  function fill(node) {
-    if (node.leaf) return;
-    node.children.forEach(fill);
-    const xs = node.children.map(c => c.x);
-    node.x = (Math.min(...xs) + Math.max(...xs)) / 2;
-  }
-  fill(root);
+  S.maxLeaves = leaves.length;
   return nodes;
 }
 
-/* ============ LER RECURSION (theoretical) ============ */
+/* ═══════ MATH: Theoretical Error Confinement ═══════ */
 function binomial(p, k) {
+  if (k < 0 || k > p) return 0;
   let num = 1, den = 1;
   for (let i = 1; i <= k; i++) { num *= (p - k + i); den *= i; }
   return num / den;
 }
+
 function levelError(eps, p) {
   const t = Math.floor(p / 2);
   let fail = 0;
   for (let j = t + 1; j <= p; j++) {
-    fail += binomial(p, j) * Math.pow(eps, j) * Math.pow(1 - eps, p - j);
+    const b = binomial(p, j);
+    const term = b * Math.pow(eps, j) * Math.pow(1 - eps, p - j);
+    if (isNaN(term) || !isFinite(term)) { fail += 0; continue; }
+    fail += term;
   }
-  return Math.min(1, fail);
+  // Edge cases
+  if (eps <= 0) return 0;
+  if (eps >= 1) return 1;
+  return Math.min(1, Math.max(0, fail));
 }
+
 function theoreticalLER(eps, p, d) {
   let e = eps;
   const series = [e];
@@ -332,7 +312,7 @@ function theoreticalLER(eps, p, d) {
   return { final: series[series.length - 1], series };
 }
 
-/* ============ MONTE CARLO ============ */
+/* ═══════ MATH: Monte Carlo Simulation ═══════ */
 function simulate(eps, p, d, trials) {
   const nodes = treeLayout(p, d);
   const byDepth = [];
@@ -341,7 +321,7 @@ function simulate(eps, p, d, trials) {
   const maxNodes = nodes.length;
   for (let t = 0; t < trials; t++) {
     const bad = new Array(maxNodes).fill(false);
-    byDepth[d].forEach(n => { if (Math.random() < eps) bad[n.index] = true; });
+    byDepth[d].forEach(n => { if (rng() < eps) bad[n.index] = true; });
     for (let dep = d - 1; dep >= 0; dep--) {
       byDepth[dep].forEach(n => {
         if (n.leaf) return;
@@ -355,274 +335,358 @@ function simulate(eps, p, d, trials) {
   return { ler: failures / trials, trials, failures };
 }
 
-/* ============ RENDER TREE ============ */
+/* ═══════ RENDER TREE ═══════ */
+function fitCanvas(cv, ctx) {
+  const r = cv.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.max(200, Math.floor(r.width)), h = Math.max(200, Math.floor(r.height));
+  if (cv.width !== w * dpr || cv.height !== h * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { w, h };
+}
+
 function renderTree() {
-  const { w, h } = fitCanvas(treeCv, tctx);
-  tctx.clearRect(0, 0, w, h);
-  const nodes = treeLayout(S.p, Math.min(S.d, 6));
-  const visualD = Math.min(S.d, 6);
-  const x0 = 24, x1 = w - 24;
-  const y0 = 34, y1 = h - 30;
+  const cv = document.getElementById("treeCanvas"), ctx = cv.getContext("2d");
+  const { w, h } = fitCanvas(cv, ctx);
+  ctx.clearRect(0, 0, w, h);
+  const nodes = treeLayout(S.p, S.d);
+  S.nodeCount = nodes.length;
 
-  tctx.lineWidth = 1;
-  nodes.forEach(n => {
-    if (n.parent) {
-      const px = x0 + n.parent.x * (x1 - x0);
-      const py = y0 + (n.parent.depth / visualD) * (y1 - y0);
-      const cx = x0 + n.x * (x1 - x0);
-      const cy = y0 + (n.depth / visualD) * (y1 - y0);
-      const isSel = S.sel && n.depth === S.sel.depth && sameSlot(n, S.sel);
-      const isHover = S.hover && n.depth === S.hover.depth && sameSlot(n, S.hover);
-      tctx.strokeStyle = isSel ? "rgba(255,179,0,0.9)" : isHover ? "rgba(0,229,255,0.8)" : "rgba(28,43,74,0.85)";
-      tctx.lineWidth = isSel ? 2 : isHover ? 1.6 : 1;
-      tctx.beginPath();
-      tctx.moveTo(px, py);
-      tctx.lineTo(cx, cy);
-      tctx.stroke();
-    }
-  });
+  const padL = 16, padR = 16, padT = 20, padB = 20;
+  const plotW = w - padL - padR, plotH = h - padT - padB;
+  const rootX = w / 2, rootY = padT + 12;
 
-  nodes.forEach(n => {
-    const cx = x0 + n.x * (x1 - x0);
-    const cy = y0 + (n.depth / visualD) * (y1 - y0);
-    const isSel = S.sel && n.depth === S.sel.depth && sameSlot(n, S.sel);
-    const isHover = S.hover && n.depth === S.hover.depth && sameSlot(n, S.hover);
-    const r = n.depth === 0 ? 4.5 : n.leaf ? 2.6 : 3.2;
-    tctx.beginPath();
-    tctx.arc(cx, cy, r, 0, Math.PI * 2);
-    if (isSel) { tctx.fillStyle = "#ffb300"; tctx.shadowColor = "rgba(255,179,0,0.8)"; tctx.shadowBlur = 12; }
-    else if (isHover) { tctx.fillStyle = "#00e5ff"; tctx.shadowColor = "rgba(0,229,255,0.7)"; tctx.shadowBlur = 10; }
-    else { tctx.fillStyle = "rgba(216,228,255,0.55)"; tctx.shadowBlur = 0; }
-    tctx.fill();
-    tctx.shadowBlur = 0;
-  });
+  const leaves = nodes.filter(n => n.leaf);
+  const leafSpacing = plotW / (leaves.length + 1);
+  const depthH = (plotH - 12) / S.d;
 
-  if (S.d > visualD) {
-    tctx.fillStyle = "rgba(125,147,191,0.8)";
-    tctx.font = "11px Cascadia Code, Consolas, monospace";
-    tctx.fillText(`visual depth capped at ${visualD}; LER computed to full depth ${S.d}`, 14, h - 8);
+  // Compute positions bottom-up
+  const pos = new Array(nodes.length);
+  let leafIdx = 0;
+  for (let i = 0; i < nodes.length; i++) {
+    if (nodes[i].leaf) pos[i] = { x: padL + (leafIdx + 1) * leafSpacing, y: padT + plotH };
+    else pos[i] = { x: 0, y: 0 };
+    if (nodes[i].leaf) leafIdx++;
   }
+  for (let dep = S.d - 1; dep >= 0; dep--) {
+    const levelNodes = nodes.filter(n => n.depth === dep && !n.leaf);
+    levelNodes.forEach(n => {
+      const xs = n.children.map(c => pos[c.index].x);
+      pos[n.index] = { x: xs.reduce((a,b)=>a+b,0)/xs.length, y: padT + dep * depthH + 12 };
+    });
+  }
+
+  // Draw edges
+  ctx.strokeStyle = "rgba(29,42,70,0.6)"; ctx.lineWidth = 0.8;
+  nodes.forEach(n => {
+    if (!n.parent) return;
+    ctx.beginPath();
+    ctx.moveTo(pos[n.parent.index].x, pos[n.parent.index].y);
+    ctx.lineTo(pos[n.index].x, pos[n.index].y);
+    ctx.stroke();
+  });
+
+  // Draw nodes
+  nodes.forEach(n => {
+    const r = n.leaf ? 2.5 : 3.5;
+    ctx.beginPath();
+    ctx.arc(pos[n.index].x, pos[n.index].y, r, 0, Math.PI * 2);
+    ctx.fillStyle = n.leaf ? "rgba(0,229,255,0.5)" : "rgba(179,136,255,0.6)";
+    if (n.depth === 0) ctx.fillStyle = "rgba(255,179,0,0.9)";
+    ctx.fill();
+  });
 }
 
-function sameSlot(a, b) {
-  if (a.depth !== b.depth) return false;
-  const sa = a.slot !== undefined ? a.slot : a.index;
-  const sb = b.slot !== undefined ? b.slot : b.index;
-  return sa === sb;
-}
+/* ═══════ RENDER CHART ═══════ */
+function renderChart() {
+  const cv = document.getElementById("chartCanvas"), ctx = cv.getContext("2d");
+  const { w, h } = fitCanvas(cv, ctx);
+  ctx.clearRect(0, 0, w, h);
 
-/* ============ CURVE CHART ============ */
-function renderCurve() {
-  const { w, h } = fitCanvas(curveCv, ccx);
-  ccx.clearRect(0, 0, w, h);
-  const padL = 64, padR = 14, padT = 14, padB = 26;
+  const padL = 34, padR = 14, padT = 14, padB = 28;
   const plotW = w - padL - padR, plotH = h - padT - padB;
 
-  const { series } = theoreticalLER(S.eps, S.p, S.d);
-  let minV = Math.min(1, ...series.filter(v => v > 0).map(v => Math.max(v, 1e-18)));
-  minV = Math.pow(10, Math.floor(Math.log10(Math.max(minV, 1e-18))));
-  const maxV = Math.pow(10, Math.ceil(Math.log10(Math.max(0.5, series[0]))));
+  const theory = theoreticalLER(S.eps, S.p, S.d);
 
-  function y(v) {
-    const t = (Math.log10(v) - Math.log10(minV)) / (Math.log10(maxV) - Math.log10(minV));
-    return padT + plotH * (1 - Math.max(0, Math.min(1, t)));
+  ctx.strokeStyle = "rgba(29,42,70,0.5)"; ctx.lineWidth = 0.5;
+  const nTicks = 5;
+  for (let i = 0; i <= nTicks; i++) {
+    const y = padT + (i / nTicks) * plotH;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
+  }
+  for (let i = 0; i <= S.d; i++) {
+    const x = padL + (i / S.d) * plotW;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + plotH); ctx.stroke();
   }
 
-  ccx.strokeStyle = "rgba(28,43,74,0.7)";
-  ccx.fillStyle = "#7d93bf";
-  ccx.font = "10px Cascadia Code, Consolas, monospace";
-  ccx.textAlign = "right";
-  for (let e = Math.log10(minV); e <= Math.log10(maxV); e += 1) {
-    const v = Math.pow(10, e);
-    if (v < minV * 0.5 || v > maxV * 1.5) continue;
-    const yy = y(v);
-    ccx.beginPath(); ccx.moveTo(padL, yy); ccx.lineTo(w - padR, yy); ccx.stroke();
-    ccx.fillText(v >= 1 ? v.toFixed(0) : "1e" + e, padL - 6, yy + 3);
+  // Theoretical line
+  ctx.beginPath();
+  ctx.strokeStyle = "rgba(0,229,255,0.8)"; ctx.lineWidth = 2;
+  for (let i = 0; i < theory.series.length; i++) {
+    const v = theory.series[i];
+    const y = padT + plotH * (1 - Math.max(0, Math.log10(v || 1e-30) / Math.log10(S.eps || 1e-30)));
+    const x = padL + (i / S.d) * plotW;
+    if (i === 0) ctx.moveTo(x, padT + plotH * (1 - Math.max(0, Math.log10(theory.series[0]) / Math.log10(theory.series[0]))));
+    ctx.lineTo(x, Math.max(padT, Math.min(padT + plotH, y)));
   }
-  ccx.textAlign = "center";
-  for (let k = 0; k <= S.d; k++) {
-    const x = padL + (k / S.d) * plotW;
-    ccx.fillText("d=" + k, x, h - 8);
-  }
+  ctx.stroke();
 
-  ccx.beginPath();
-  ccx.strokeStyle = "#00e5ff";
-  ccx.lineWidth = 2;
-  ccx.shadowColor = "rgba(0,229,255,0.6)";
-  ccx.shadowBlur = 8;
-  series.forEach((v, k) => {
-    const x = padL + (k / S.d) * plotW;
-    const yy = y(Math.max(v, minV));
-    if (k === 0) ccx.moveTo(x, yy); else ccx.lineTo(x, yy);
-  });
-  ccx.stroke();
-  ccx.shadowBlur = 0;
-
-  series.forEach((v, k) => {
-    const x = padL + (k / S.d) * plotW;
-    const yy = y(Math.max(v, minV));
-    ccx.beginPath();
-    ccx.arc(x, yy, 3, 0, Math.PI * 2);
-    ccx.fillStyle = "#00e5ff";
-    ccx.fill();
-  });
-}
-
-/* ============ CONFINEMENT MAP ============ */
-function renderBall() {
-  const { w, h } = fitCanvas(ballCv, bcx);
-  bcx.clearRect(0, 0, w, h);
-  const cx0 = w / 2, cy0 = h / 2;
-  const R = Math.min(w, h) / 2 - 26;
-  const rings = 3;
-  for (let r = 1; r <= rings; r++) {
-    const rad = (r / rings) * R;
-    bcx.strokeStyle = "rgba(42,63,110,0.8)";
-    bcx.lineWidth = 1;
-    bcx.beginPath();
-    bcx.arc(cx0, cy0, rad, 0, Math.PI * 2);
-    bcx.stroke();
-  }
-  const angle = -Math.PI / 2;
-  const rad1 = (1 / rings) * R;
-  bcx.fillStyle = "rgba(255,179,0,0.18)";
-  bcx.strokeStyle = "rgba(255,179,0,0.9)";
-  bcx.lineWidth = 2;
-  bcx.beginPath();
-  bcx.arc(cx0, cy0, rad1, 0, Math.PI * 2);
-  bcx.fill(); bcx.stroke();
-
-  const n = S.p;
-  for (let k = 0; k < n; k++) {
-    const a = angle + (k / n) * Math.PI * 2;
-    const x = cx0 + Math.cos(a) * rad1 * 0.9;
-    const y = cy0 + Math.sin(a) * rad1 * 0.9;
-    const rr = rad1 * 0.32;
-    bcx.beginPath();
-    bcx.arc(x, y, rr, 0, Math.PI * 2);
-    if (k === 0) { bcx.fillStyle = "rgba(255,179,0,0.3)"; bcx.fill(); bcx.stroke(); }
-    else {
-      bcx.fillStyle = "rgba(0,229,255,0.08)";
-      bcx.strokeStyle = "rgba(0,229,255,0.7)";
-      bcx.lineWidth = 1.2;
-      bcx.fill(); bcx.stroke();
-      bcx.fillStyle = "rgba(0,255,163,0.8)";
-      bcx.beginPath();
-      bcx.arc(x, y, 1.6, 0, Math.PI * 2);
-      bcx.fill();
-    }
-  }
-  bcx.fillStyle = "#7d93bf";
-  bcx.font = "10px Cascadia Code, Consolas, monospace";
-  bcx.textAlign = "center";
-  bcx.fillText("disjoint balls → no error leak", cx0, h - 10);
-}
-
-/* ============ UI UPDATE ============ */
-function fmtSci(v) {
-  if (!isFinite(v) || v <= 0) return "0";
-  if (v >= 1) return v.toFixed(4);
-  if (v >= 1e-3) return v.toPrecision(4);
-  const exp = Math.floor(Math.log10(v));
-  const mant = v / Math.pow(10, exp);
-  return mant.toFixed(2) + "×10^" + exp;
-}
-function updateReadouts() {
-  const t = theoreticalLER(S.eps, S.p, S.d);
-  document.getElementById("lerVal").textContent = fmtSci(t.final);
-  document.getElementById("epsVal").textContent = (S.eps * 100).toFixed(1) + "%";
-  document.getElementById("physVal").textContent = (S.eps * 100).toFixed(1) + "%";
-  document.getElementById("pVal").textContent = S.p;
-  document.getElementById("dVal").textContent = S.d;
-  const single = levelError(S.eps, S.p);
-  const supp = t.final > 0 && single > 0 ? single / t.final : Infinity;
-  document.getElementById("suppVal").textContent = supp === Infinity ? "∞" : (supp >= 1000 ? supp.toExponential(2) : supp.toFixed(1) + "×");
+  // Sim point
   if (S.sim) {
-    document.getElementById("measVal").textContent = fmtSci(S.sim.ler);
-    document.getElementById("measSub").textContent = `${S.sim.failures}/${S.sim.trials} failed (${S.sim.trials} trials)`;
+    const sy = padT + plotH * (1 - Math.max(0, Math.log10(S.sim.ler || 1e-30) / Math.log10(S.eps || 1e-30)));
+    const sx = padL + (S.d / S.d) * plotW;
+    ctx.beginPath();
+    ctx.arc(sx, Math.max(padT, Math.min(padT + plotH, sy)), 5, 0, Math.PI*2);
+    ctx.fillStyle = "rgba(255,179,0,0.8)"; ctx.fill();
   }
-  renderTree(); renderCurve(); renderBall();
+
+  // Labels
+  ctx.fillStyle = "var(--text-dim)"; ctx.font = "9px Cascadia Code, monospace";
+  ctx.textAlign = "center";
+  for (let i = 0; i <= S.d; i++) {
+    const x = padL + (i / S.d) * plotW;
+    ctx.fillText(String(i), x, padT + plotH + 14);
+  }
+  ctx.textAlign = "right";
+  for (let i = 0; i <= nTicks; i++) {
+    const frac = 1 - i / nTicks;
+    const val = S.eps * Math.pow(10, -frac * 3);
+    const y = padT + (i / nTicks) * plotH;
+    if (val > 1e-30) ctx.fillText(val < 1e-6 ? val.toExponential(1) : (val*100).toFixed(1) + "%", padL - 6, y + 3);
+  }
 }
 
-/* ============ MONTE CARLO RUN ============ */
-async function runSim() {
+/* ═══════ UPDATE READOUTS ═══════ */
+function updateReadouts() {
+  const theory = theoreticalLER(S.eps, S.p, S.d);
+  document.getElementById("theoVal").textContent = theory.final < 1e-15
+    ? theory.final.toExponential(2)
+    : theory.final > 0.01
+      ? (theory.final * 100).toFixed(1) + "%"
+      : theory.final.toExponential(2);
+
+  if (S.sim) {
+    document.getElementById("simVal").textContent = S.sim.ler < 1e-15
+      ? S.sim.ler.toExponential(2)
+      : S.sim.ler > 0.01
+        ? (S.sim.ler * 100).toFixed(1) + "%"
+        : S.sim.ler.toExponential(2);
+    document.getElementById("simUnit").textContent = `(${S.sim.failures}/${S.sim.trials} failures)`;
+  } else {
+    document.getElementById("simVal").textContent = "—";
+    document.getElementById("simUnit").textContent = "Click ▶ Run Simulation";
+  }
+
+  const sf = S.eps / Math.max(theory.final, 1e-300);
+  document.getElementById("suppVal").textContent = sf > 1e10 ? sf.toExponential(1) + "×" : sf.toFixed(0) + "×";
+}
+
+function rebuild() {
+  S.sim = null;
+  renderTree();
+  renderChart();
+  updateReadouts();
+  logState();
+}
+
+/* ═══════ SIMULATION ═══════ */
+async function runSimulation() {
   if (S.running) return;
   S.running = true;
-  const btn = document.getElementById("runBtn");
-  btn.classList.add("running");
-  btn.textContent = "Simulating…";
-  await new Promise(r => setTimeout(r, 30));
+  const btn = document.getElementById("runSimBtn");
+  const orig = btn.textContent;
+  btn.innerHTML = '<span class="spinner"></span> Running…';
+  btn.disabled = true;
 
-  const nodes = treeLayout(S.p, S.d).length;
-  const trials = Math.max(120, Math.min(3000, Math.floor(8e5 / Math.max(1, nodes))));
-  const t0 = performance.now();
-  const res = simulate(S.eps, S.p, S.d, trials);
-  const dt = ((performance.now() - t0) / 1000).toFixed(2);
-  S.sim = { ler: res.ler, trials: res.trials, failures: res.failures, dt };
-  document.getElementById("measSub").textContent = `${res.failures}/${res.trials} failed · ${dt}s`;
+  await new Promise(r => setTimeout(r, 50)); // Yield to render spinner
+
+  const trials = 10000;
+  S.sim = simulate(S.eps, S.p, S.d, trials);
+  renderChart();
   updateReadouts();
 
-  btn.classList.remove("running");
-  btn.textContent = "Run Simulation";
   S.running = false;
+  btn.textContent = orig;
+  btn.disabled = false;
+  showToast("Simulation complete: " + S.sim.failures + " failures in " + trials + " trials");
 }
 
-/* ============ INTERACTION ============ */
-const epsSlider = document.getElementById("eps");
-epsSlider.addEventListener("input", () => {
-  S.eps = parseFloat(epsSlider.value) / 100;
-  updateReadouts();
-});
-document.getElementById("pSeg").addEventListener("click", (e) => {
-  const btn = e.target.closest("button"); if (!btn) return;
-  S.p = parseInt(btn.dataset.p);
-  document.querySelectorAll("#pSeg button").forEach(b => b.classList.toggle("active", b === btn));
-  S.sel = null; S.hover = null;
-  updateReadouts();
-});
-document.getElementById("dSeg").addEventListener("click", (e) => {
-  const btn = e.target.closest("button"); if (!btn) return;
-  S.d = parseInt(btn.dataset.d);
-  document.querySelectorAll("#dSeg button").forEach(b => b.classList.toggle("active", b === btn));
-  S.sel = null; S.hover = null;
-  updateReadouts();
-});
-document.getElementById("runBtn").addEventListener("click", runSim);
-
-treeCv.addEventListener("mousemove", (e) => {
-  const rect = treeCv.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  const { w, h } = fitCanvas(treeCv, tctx);
-  const nodes = treeLayout(S.p, Math.min(S.d, 6));
-  const visualD = Math.min(S.d, 6);
-  const x0 = 24, x1 = w - 24, y0 = 34, y1 = h - 30;
-  let best = null, bestDist = 24;
-  nodes.forEach(n => {
-    const cx = x0 + n.x * (x1 - x0);
-    const cy = y0 + (n.depth / visualD) * (y1 - y0);
-    const dist = Math.hypot(mx - cx, my - cy);
-    if (dist < bestDist) { bestDist = dist; best = n; }
-  });
-  S.hover = best ? { depth: best.depth, slot: best.slot !== undefined ? best.slot : best.index } : null;
-  renderTree();
-});
-treeCv.addEventListener("mouseleave", () => { S.hover = null; renderTree(); });
-treeCv.addEventListener("click", (e) => {
-  if (S.hover) {
-    S.sel = { ...S.hover };
-    document.getElementById("treeStatus").textContent = `inspecting subtree at depth ${S.sel.depth} — errors confined here`;
-  } else {
-    S.sel = null;
-    document.getElementById("treeStatus").textContent = "hover / click a subtree to inspect";
+/* ═══════ COLLAPSE ANIMATION ═══════ */
+async function animate() {
+  const btn = document.getElementById("animBtn");
+  const orig = btn.textContent;
+  btn.textContent = "Collapsing…";
+  for (let k = 0; k <= S.d; k++) {
+    const theory = theoreticalLER(S.eps, S.p, k);
+    const val = theory.final < 1e-15 ? theory.final.toExponential(2) : (theory.final*100).toFixed(1)+"%";
+    btn.textContent = `d=${k}: LER=${val}`;
+    await new Promise(r => setTimeout(r, 400));
   }
-  renderTree();
+  btn.textContent = orig;
+}
+
+/* ═══════ LOGGING ═══════ */
+function logState() {
+  console.log("[QWAV-A1] State:", JSON.stringify({
+    eps: S.eps, p: S.p, d: S.d, seed: S.seed,
+    nodes: S.nodeCount, maxLeaves: S.maxLeaves,
+    timestamp: new Date().toISOString()
+  }));
+}
+
+/* ═══════ MATH VERIFICATION ═══════ */
+function verifyMath() {
+  const results = [];
+  const check = (name, fn) => {
+    try { const r = fn(); results.push({name,status:r===true?"PASS":"FAIL",detail:r===true?"":String(r)}); return r===true; }
+    catch(e) { results.push({name,status:"ERROR",detail:e.message}); return false; }
+  };
+
+  // Edge cases
+  const eps0 = theoreticalLER(0, 3, 5);
+  check("ε=0 → LER=0", () => eps0.final === 0 ? true : `Got ${eps0.final}`);
+
+  const eps1 = theoreticalLER(1, 3, 5);
+  check("ε=1 → LER=1", () => eps1.final > 0.99 && eps1.final <= 1 ? true : `Got ${eps1.final}`);
+
+  // Monotonicity
+  const series = [];
+  for (let eps = 0.01; eps <= 0.5; eps += 0.05) series.push(theoreticalLER(eps, 3, 3).final);
+  check("LER monotonic in ε", () => {
+    for (let i = 1; i < series.length; i++) if (series[i] < series[i-1]) return `Not monotonic at i=${i}`;
+    return true;
+  });
+
+  // Analytical match (Monte Carlo with high-error regime for statistical significance)
+  const theory = theoreticalLER(0.25, 3, 2).final;
+  const sim = simulate(0.25, 3, 2, 5000);
+  check("Theory ≈ Monte Carlo (±15%)", () => {
+    const diff = Math.abs(sim.ler - theory) / Math.max(theory, 1e-300);
+    return diff < 0.15 ? true : `Diff=${(diff*100).toFixed(1)}% (theory=${(theory*100).toFixed(2)}%, sim=${(sim.ler*100).toFixed(2)}%)`;
+  });
+
+  // Tree size
+  check("Tree size p^d", () => {
+    const expected = (Math.pow(S.p, S.d+1)-1)/(S.p-1);
+    return S.nodeCount === expected ? true : `Expected ${expected}, got ${S.nodeCount}`;
+  });
+
+  // Reproducibility
+  check("Deterministic (seed=42)", () => {
+    rng = mulberry32(42);
+    const s1 = simulate(0.1, 3, 3, 5000).ler;
+    rng = mulberry32(42);
+    const s2 = simulate(0.1, 3, 3, 5000).ler;
+    return s1 === s2 ? true : `s1=${s1}, s2=${s2}`;
+  });
+
+  // Summary
+  let pass = 0, fail = 0;
+  results.forEach(r => { if (r.status==="PASS") pass++; else fail++; });
+  const msg = `Math verification: ${pass}/${results.length} passed`;
+  showToast(msg);
+  console.table(results);
+  return { total: results.length, passed: pass, failed: fail, results };
+}
+
+/* ═══════ GUIDED TOUR ═══════ */
+const TOUR_STEPS = [
+  { title: "What You're Looking At", body: "This demo shows how ultrametric tree geometry suppresses errors. Physical errors at the leaves are corrected by majority voting as they propagate upward — the logical error rate at the root can be billions of times lower." },
+  { title: "Try Changing the Prime (p)", body: "The branching factor p controls how many children each node has. With p=3, a parent needs 2 of 3 children to be bad before it becomes bad. Higher p means stronger error suppression. Click any p button to see the tree structure change." },
+  { title: "Run a Monte Carlo Simulation", body: "Click ▶ Run Simulation to actually inject random errors at the leaves and watch them get corrected as they move up the tree through majority voting. The amber dot shows the simulated logical error rate." },
+  { title: "Explore Further", body: "Adjust the Physical Error Rate slider, change the tree Depth, try different p values, and compare the theoretical prediction (cyan line) with the Monte Carlo result (amber dot). Run the Collapse animation to see error suppression level by level." },
+];
+
+let tourStep = 0;
+function startTour() {
+  tourStep = 0;
+  showTourStep();
+}
+function showTourStep() {
+  const overlay = document.getElementById("tourOverlay");
+  if (tourStep >= TOUR_STEPS.length) { overlay.classList.remove("active"); localStorage.setItem("qwav-a1-tour-done","1"); return; }
+  overlay.classList.add("active");
+  document.getElementById("tourTitle").textContent = TOUR_STEPS[tourStep].title;
+  document.getElementById("tourBody").textContent = TOUR_STEPS[tourStep].body;
+  const dots = document.getElementById("tourDots");
+  dots.innerHTML = TOUR_STEPS.map((_,i) => `<div class="step-dot${i===tourStep?' active':''}"></div>`).join("");
+  document.getElementById("tourNext").textContent = tourStep === TOUR_STEPS.length-1 ? "Got it!" : "Next →";
+}
+function nextTour() { tourStep++; showTourStep(); }
+function skipTour() { document.getElementById("tourOverlay").classList.remove("active"); localStorage.setItem("qwav-a1-tour-done","1"); }
+
+/* ═══════ TOAST ═══════ */
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+/* ═══════ EVENT BINDINGS ═══════ */
+document.getElementById("epsSlider").addEventListener("input", e => {
+  S.eps = parseInt(e.target.value) / 100;
+  document.getElementById("epsLabel").textContent = "ε = " + (S.eps*100).toFixed(0) + "%";
+  rebuild();
 });
 
-window.addEventListener("resize", () => { updateReadouts(); });
+document.getElementById("pSeg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  S.p = parseInt(b.dataset.p);
+  document.querySelectorAll("#pSeg button").forEach(x => x.classList.toggle("active", x===b));
+  rebuild();
+});
 
-/* ============ INIT ============ */
-updateReadouts();
+document.getElementById("dSeg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  S.d = parseInt(b.dataset.d);
+  document.querySelectorAll("#dSeg button").forEach(x => x.classList.toggle("active", x===b));
+  rebuild();
+});
+
+document.getElementById("runSimBtn").addEventListener("click", runSimulation);
+document.getElementById("resetBtn").addEventListener("click", () => { S.eps=0.01; S.p=3; S.d=5; S.seed=42; S.sim=null; rng=mulberry32(42); document.getElementById("epsSlider").value=1; document.getElementById("epsLabel").textContent="ε = 1%"; document.querySelectorAll("#pSeg button[data-p='3']")[0].classList.add("active"); document.querySelectorAll("#dSeg button[data-d='5']")[0].classList.add("active"); document.getElementById("seedInput").value=42; rebuild(); showToast("Reset to defaults"); });
+document.getElementById("verifyBtn").addEventListener("click", verifyMath);
+document.getElementById("animBtn").addEventListener("click", animate);
+document.getElementById("reseedBtn").addEventListener("click", () => { S.seed = parseInt(document.getElementById("seedInput").value) || 42; rng = mulberry32(S.seed); S.sim = null; rebuild(); showToast("Reseeded: "+S.seed); });
+document.getElementById("seedInput").addEventListener("change", e => { S.seed = parseInt(e.target.value) || 42; rng = mulberry32(S.seed); S.sim = null; rebuild(); });
+
+// Tour triggers
+document.getElementById("tourTrigger").addEventListener("click", e => { e.preventDefault(); startTour(); });
+document.getElementById("tourNext").addEventListener("click", nextTour);
+document.getElementById("tourSkip").addEventListener("click", skipTour);
+
+// Keyboard shortcuts
+document.addEventListener("keydown", e => {
+  if (e.key === "r" && e.ctrlKey) { e.preventDefault(); runSimulation(); }
+  if (e.key === "v" && e.ctrlKey) { e.preventDefault(); verifyMath(); }
+});
+
+// Resize handler
+let resizeTimer;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(rebuild, 200); });
+
+/* ═══════ INIT ═══════ */
+function init() {
+  // Try to set slider to saved state or default
+  document.getElementById("epsSlider").value = 1;
+  rebuild();
+
+  // Guided tour on first visit
+  if (!localStorage.getItem("qwav-a1-tour-done")) {
+    setTimeout(startTour, 800);
+  }
+
+  logState();
+}
+
+init();
+
+// Expose verification harness
+window.__qwavMathVerify = {
+  verifyAll: verifyMath,
+  theoreticalLER, simulate, S,
+};
+console.log("[QWAV-A1] Error Confinement Demo ready. Math verification available via verifyMath() or Ctrl+V.");
 </script>
 </body>
 </html>
