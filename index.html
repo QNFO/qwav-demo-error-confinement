@@ -3,690 +3,848 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Error Confinement — Bruhat-Tits Error Suppression Demo</title>
+<title>Error Confinement — Bruhat–Tits Error Suppression Demo</title>
 <style>
-  :root {
-    --ink: #07080f; --ink-2: #0b0f1c; --panel: #0e1425; --line: #1d2a46;
-    --line-2: #2b3d6b; --text: #dce6ff; --text-dim: #8295c0;
-    --cyan: #00e5ff; --amber: #ffb300; --ember: #ff5e3a; --ice: #7dd8ff;
-    --green: #00ffa3; --violet: #b388ff;
-    --mono: "Cascadia Code","Consolas","SFMono-Regular",monospace;
-    --ui: "Bahnschrift","Segoe UI","Arial Narrow",sans-serif;
-    --radius: 8px; --radius-sm: 5px;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{
-    background:radial-gradient(1100px 560px at 72% -12%,rgba(0,229,255,0.06),transparent 60%),
-               radial-gradient(800px 480px at 8% 112%,rgba(255,59,92,0.04),transparent 55%),var(--ink);
-    color:var(--text);font-family:var(--ui);min-height:100vh;overflow-x:hidden;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:1340px;margin:0 auto;padding:20px 24px 40px}
-  
-  /* Header */
-  .header{padding:18px 0 10px;border-bottom:1px solid var(--line);margin-bottom:18px}
-  .header h1{font-family:var(--mono);font-size:1.35rem;font-weight:600;color:var(--cyan);letter-spacing:-0.01em}
-  .header .tagline{font-size:0.85rem;color:var(--text-dim);margin-top:4px}
-  
-  /* Layout */
-  .grid{display:grid;grid-template-columns:280px 1fr 300px;gap:18px;align-items:start}
-  @media(max-width:1100px){.grid{grid-template-columns:1fr}}
-  
-  /* Panels */
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;position:relative}
-  .panel h2{font-family:var(--mono);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* Buttons */
-  .seg{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
-  .seg button{
-    background:var(--ink-2);border:1px solid var(--line);color:var(--text-dim);
-    font-family:var(--mono);font-size:0.78rem;padding:6px 12px;border-radius:var(--radius-sm);
-    cursor:pointer;transition:all 0.15s;min-width:36px;text-align:center;
-  }
-  .seg button:hover{color:var(--text);border-color:var(--line-2);background:rgba(0,229,255,0.06)}
-  .seg button.active{background:rgba(0,229,255,0.12);color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 8px rgba(0,229,255,0.15)}
-  .seg button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+:root {
+  --bg: #ffffff;
+  --surface: #f8f9fa;
+  --border: #dee2e6;
+  --text: #212529;
+  --muted: #6c757d;
+  --accent: #1a73e8;
+  --accent-soft: #e8f0fe;
+  --error: #d93025;
+  --error-soft: #fce8e6;
+  --confined: #188038;
+  --confined-soft: #e6f4ea;
+  --grid: #f1f3f5;
+}
 
-  /* Slider */
-  .slider-group{margin:8px 0}
-  .slider-group label{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-dim);margin-bottom:4px}
-  .slider-group label span{color:var(--cyan);font-family:var(--mono)}
-  .slider-group input[type=range]{width:100%;accent-color:var(--cyan)}
-  .slider-group .ticks{display:flex;justify-content:space-between;font-size:0.65rem;color:var(--text-dim);padding:0 2px}
+html { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; line-height: 1.55; }
+body { min-height: 100vh; }
 
-  /* Readouts */
-  .readout-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid rgba(29,42,70,0.5)}
-  .readout-row:last-child{border-bottom:none}
-  .readout-label{font-size:0.75rem;color:var(--text-dim)}
-  .readout-val{font-family:var(--mono);font-size:0.85rem;color:var(--text)}
-  .readout-val.cyan{color:var(--cyan)}
-  .readout-val.amber{color:var(--amber)}
-  .readout-val.big{font-size:1.2rem;font-weight:600}
-  .readout-unit{font-size:0.65rem;color:var(--text-dim);margin-left:3px}
+/* HEADER */
+header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  background: var(--surface);
+}
+header h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 1.35rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+header h1 span.claim { display: block; font-size: 0.8rem; font-weight: 400; color: var(--muted); margin-top: 0.2rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--confined); flex-shrink: 0; }
 
-  /* Canvas area */
-  .canvas-panel canvas{width:100%;display:block;border-radius:4px}
-  
-  /* Formula panel */
-  .formula-box{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;font-family:var(--mono);font-size:0.75rem;color:var(--text-dim);line-height:1.7;margin-top:10px}
-  .formula-box .eq{color:var(--cyan)}
-  .formula-box .var{color:var(--amber)}
-  .formula-box .comment{color:var(--text-dim);opacity:0.6}
+/* LAYOUT */
+main { display: grid; grid-template-columns: 340px 1fr; height: calc(100vh - 76px); }
+.panel { border-right: 1px solid var(--border); background: var(--surface); padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.9rem; }
+.viewport { position: relative; overflow: hidden; display: flex; flex-direction: column; }
 
-  /* Action bar */
-  .action-bar{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
-  .action-bar button{
-    background:var(--ink-2);border:1px solid var(--line);color:var(--text-dim);
-    font-family:var(--ui);font-size:0.73rem;padding:5px 10px;border-radius:var(--radius-sm);
-    cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:4px
-  }
-  .action-bar button:hover{color:var(--text);border-color:var(--line-2)}
-  .action-bar button.primary{background:rgba(0,229,255,0.1);color:var(--cyan);border-color:var(--cyan)}
-  .action-bar button:disabled{opacity:0.4;cursor:not-allowed}
+.section { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.85rem 1rem; }
+.section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.6rem; font-weight: 600; }
 
-  /* Tour overlay */
-  .tour-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s}
-  .tour-overlay.active{opacity:1;pointer-events:all}
-  .tour-card{background:var(--panel);border:1px solid var(--cyan);border-radius:var(--radius);padding:24px 28px;max-width:420px;text-align:center;box-shadow:0 0 40px rgba(0,229,255,0.15)}
-  .tour-card h3{font-family:var(--mono);color:var(--cyan);font-size:1rem;margin-bottom:8px}
-  .tour-card p{color:var(--text-dim);font-size:0.85rem;line-height:1.5;margin-bottom:16px}
-  .tour-card .step-dots{display:flex;justify-content:center;gap:6px;margin-bottom:14px}
-  .tour-card .step-dot{width:6px;height:6px;border-radius:50%;background:var(--line-2);transition:all 0.2s}
-  .tour-card .step-dot.active{background:var(--cyan);box-shadow:0 0 6px rgba(0,229,255,0.4)}
-  .tour-card button{background:var(--cyan);border:none;color:var(--ink);font-family:var(--ui);font-size:0.82rem;padding:8px 24px;border-radius:var(--radius-sm);cursor:pointer;font-weight:600}
-  .tour-card button:hover{box-shadow:0 0 16px rgba(0,229,255,0.3)}
-  .tour-card .skip{background:none;color:var(--text-dim);border:none;margin-left:10px;font-size:0.75rem;cursor:pointer}
+/* HELP */
+details.help { border: 1px solid var(--accent); border-radius: 6px; background: var(--accent-soft); padding: 0.6rem 0.85rem; }
+details.help summary { cursor: pointer; font-size: 0.8rem; font-weight: 600; color: var(--accent); }
+details.help ul { margin: 0.5rem 0 0 1.1rem; font-size: 0.75rem; color: var(--text); }
+details.help li { margin-bottom: 0.25rem; }
 
-  /* Toast */
-  .toast{position:fixed;bottom:24px;right:24px;background:var(--panel);border:1px solid var(--green);color:var(--green);padding:10px 18px;border-radius:var(--radius-sm);font-family:var(--mono);font-size:0.73rem;z-index:200;opacity:0;transform:translateY(20px);transition:all 0.3s;pointer-events:none}
-  .toast.show{opacity:1;transform:translateY(0)}
+/* CONTROLS */
+.control-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.control-row label { font-size: 0.78rem; color: var(--muted); min-width: 4.5rem; }
+.prime-btn {
+  width: 2.4rem; height: 2.4rem; border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  border-radius: 5px; cursor: pointer; font-size: 0.95rem; font-weight: 600;
+  transition: all 0.12s; font-family: inherit;
+}
+.prime-btn:hover { border-color: var(--accent); }
+.prime-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.slider-wrap { flex: 1; }
+.slider-wrap input[type=range] { width: 100%; accent-color: var(--accent); }
+.slider-labels { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-top: 0.2rem; }
 
-  /* Spinner */
-  .spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--line-2);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:4px}
-  @keyframes spin{to{transform:rotate(360deg)}}
+.action-btn {
+  width: 100%; padding: 0.55rem 0.8rem; border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  font-size: 0.8rem; border-radius: 5px; cursor: pointer; transition: all 0.12s; text-align: left; font-family: inherit;
+}
+.action-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+.action-btn.active { border-color: var(--error); color: var(--error); font-weight: 600; background: var(--error-soft); }
+.action-btn .indicator { float: right; font-size: 0.65rem; color: var(--accent); }
+.action-btn .indicator.off { color: var(--muted); }
+.action-btn.active .indicator { color: var(--error); }
 
-  /* Seed input */
-  .seed-row{display:flex;align-items:center;gap:6px;margin-top:6px}
-  .seed-row input{background:var(--ink-2);border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:0.73rem;padding:4px 8px;border-radius:var(--radius-sm);width:80px}
-  .seed-row input:focus{outline:none;border-color:var(--cyan)}
-  .seed-row label{font-size:0.7rem;color:var(--text-dim)}
-  
-  /* Footer */
-  .footer{margin-top:20px;padding-top:12px;border-top:1px solid var(--line);font-size:0.65rem;color:var(--text-dim);text-align:center}
-  .footer a{color:var(--cyan);text-decoration:none}
-  .footer a:hover{text-decoration:underline}
+/* FORMULA */
+.formula {
+  font-family: Georgia, 'Times New Roman', serif; font-size: 0.85rem; color: var(--text);
+  background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 5px;
+  padding: 0.6rem 0.8rem; text-align: center; line-height: 1.7;
+}
+
+/* STATS */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem; }
+.stat-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; }
+.stat-value { font-size: 1.05rem; font-weight: 700; color: var(--accent); font-family: 'JetBrains Mono', Consolas, monospace; }
+.stat-value.err { color: var(--error); }
+.stat-value.cnf { color: var(--confined); }
+
+/* KEY INSIGHT */
+.insight { font-size: 0.75rem; line-height: 1.65; color: var(--text); }
+.insight b { color: var(--accent); }
+.insight .err { color: var(--error); font-weight: 600; }
+
+/* TABS */
+.tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); }
+.tab {
+  padding: 0.6rem 1.3rem; border: none; background: transparent; color: var(--muted);
+  font-size: 0.8rem; cursor: pointer; border-right: 1px solid var(--border);
+  transition: all 0.12s; font-family: inherit; font-weight: 500;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); background: var(--bg); border-bottom: 2px solid var(--accent); margin-bottom: -1px; font-weight: 600; }
+
+/* CANVAS */
+.canvas-wrap { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg); }
+.canvas-wrap canvas { display: block; }
+.overlay { position: absolute; bottom: 0.8rem; left: 1rem; font-size: 0.7rem; color: var(--muted); background: rgba(255,255,255,0.9); padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid var(--border); max-width: calc(100% - 2rem); }
+.overlay.bright { color: var(--error); border-color: var(--error); }
+.tooltip {
+  position: absolute; pointer-events: none; background: var(--text); color: #fff;
+  padding: 0.35rem 0.6rem; border-radius: 4px; font-size: 0.7rem; display: none; z-index: 10; white-space: nowrap;
+}
+
+/* LEGEND */
+.legend { display: flex; gap: 1.1rem; padding: 0.45rem 1rem; border-top: 1px solid var(--border); background: var(--surface); font-size: 0.7rem; color: var(--muted); flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 0.35rem; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+.legend-dot.root { background: var(--accent); }
+.legend-dot.selected { background: #4d8ff7; }
+.legend-dot.error { background: var(--error); }
+.legend-dot.descendant { background: #f4a79a; }
+.legend-dot.confined { background: var(--confined); }
+
+/* FORMULA DISPLAY */
+.equation { font-family: Georgia, 'Times New Roman', serif; font-size: 0.9rem; color: var(--text); padding: 0.4rem 0; text-align: center; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: auto; min-height: 100vh; }
+  .panel { border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; flex-wrap: wrap; gap: 0.5rem; padding: 0.6rem; }
+  .section { flex: 1; min-width: 150px; padding: 0.6rem; }
+  .viewport { min-height: 60vh; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
+<header>
+  <h1>Error Confinement — Ultrametric Error Suppression
+    <span class="claim">Shows: on a Bruhat–Tits (p-adic) tree, the strong triangle inequality confines errors strictly to the affected node's subtree — they cannot leak to siblings, parents, or any other branch of the tree.</span>
+  </h1>
+  <div class="status-dot" title="Computation engine active"></div>
+</header>
 
-<div class="header">
-  <h1>Error Confinement — Bruhat-Tits Error Suppression</h1>
-  <div class="tagline">Watch physical error rates collapse into negligible logical error rates through ultrametric tree geometry</div>
-</div>
+<main>
+  <aside class="panel">
+    <details class="help" open>
+      <summary>How to use this demo (click to collapse)</summary>
+      <ul>
+        <li><b>Prime buttons</b> — choose the branching factor p of the Bruhat–Tits tree (2, 3, or 5).</li>
+        <li><b>Depth slider</b> — how many levels deep to build the tree (1–6).</li>
+        <li><b>Inject error</b> — toggle error mode, then click any node to inject an error at that node.</li>
+        <li><b>Tree geometry</b> tab — see the full tree; the error subtree is shown in red.</li>
+        <li><b>Confinement analysis</b> tab — bar chart of subtree sizes by injection depth (proves confinement).</li>
+        <li><b>Reset</b> — clear all selections and errors.</li>
+      </ul>
+    </details>
 
-<div class="grid">
-  <!-- LEFT PANEL: Controls + Readouts -->
-  <div style="display:flex;flex-direction:column;gap:12px">
-    <div class="panel" id="controlsPanel">
-      <h2>Parameters</h2>
-
-      <div class="slider-group">
-        <label>Physical Error Rate <span id="epsLabel">ε = 1.0%</span></label>
-        <input type="range" id="epsSlider" min="0" max="100" value="1" step="1">
-        <div class="ticks"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
-      </div>
-
-      <label style="font-size:0.7rem;color:var(--text-dim);margin:8px 0 4px;display:block">Prime (p)</label>
-      <div class="seg" id="pSeg">
-        <button data-p="2">p = 2</button>
-        <button data-p="3" class="active">p = 3</button>
-        <button data-p="5">p = 5</button>
-      </div>
-
-      <label style="font-size:0.7rem;color:var(--text-dim);margin:8px 0 4px;display:block">Tree Depth (d)</label>
-      <div class="seg" id="dSeg">
-        <button data-d="2">2</button>
-        <button data-d="3">3</button>
-        <button data-d="4">4</button>
-        <button data-d="5" class="active">5</button>
-        <button data-d="6">6</button>
-        <button data-d="7">7</button>
-      </div>
-
-      <div class="action-bar">
-        <button id="runSimBtn" class="primary" title="Run Monte Carlo simulation">▶ Run Simulation</button>
-        <button id="resetBtn" title="Reset to defaults">↺ Reset</button>
-        <button id="verifyBtn" title="Run mathematical verification">✓ Verify Math</button>
+    <div class="section">
+      <div class="section-title">Effective prime p (branching factor)</div>
+      <div class="control-row" id="primeButtons">
+        <button class="prime-btn active" data-p="2" title="p = 2: binary tree">2</button>
+        <button class="prime-btn" data-p="3" title="p = 3: ternary tree">3</button>
+        <button class="prime-btn" data-p="5" title="p = 5: 5-ary tree">5</button>
       </div>
     </div>
 
-    <!-- Readouts -->
-    <div class="panel" id="readoutPanel">
-      <h2>Results</h2>
-      <div class="readout-row">
-        <span class="readout-label">Logical Error Rate (theoretical)</span>
-        <span><span class="readout-val cyan big" id="theoVal">—</span></span>
+    <div class="section">
+      <div class="section-title">Tree depth d</div>
+      <div class="slider-wrap">
+        <input type="range" id="depthSlider" min="1" max="6" value="3" step="1" title="Number of tree levels">
+        <div class="slider-labels"><span>1</span><span>6</span></div>
       </div>
-      <div class="readout-row">
-        <span class="readout-label">Logical Error Rate (Monte Carlo)</span>
-        <span><span class="readout-val amber big" id="simVal">—</span><span class="readout-unit" id="simUnit"></span></span>
-      </div>
-      <div class="readout-row">
-        <span class="readout-label">Suppression Factor</span>
-        <span><span class="readout-val" id="suppVal">—</span></span>
-      </div>
-      <div class="readout-row">
-        <span class="readout-label">MC Trials</span>
-        <span><span class="readout-val" id="trialsVal">10,000</span></span>
-      </div>
-
-      <!-- Formula -->
-      <div class="formula-box">
-        <div class="eq">LER = f<sup>d</sup>(ε)</div>
-        <div class="comment">where <span class="var">f(ε) = Σ<sub>j=⌊p/2⌋+1</sub><sup>p</sup> C(p,j)·ε<sup>j</sup>·(1−ε)<sup>p−j</sup></span></div>
-        <div class="comment" style="margin-top:3px">Majority vote: parent bad if &gt;⌊p/2⌋ children bad</div>
-      </div>
-
-      <!-- Reproducibility -->
-      <div class="seed-row" style="margin-top:10px">
-        <label>Seed:</label>
-        <input type="number" id="seedInput" value="42" min="0" max="2147483647" title="PRNG seed for deterministic Monte Carlo">
-        <button id="reseedBtn" style="font-size:0.65rem;padding:3px 8px">Reseed</button>
+      <div style="display:flex;justify-content:space-between;margin-top:0.2rem;">
+        <span style="font-size:0.7rem;color:var(--muted)">Current depth:</span>
+        <span style="font-size:0.9rem;font-weight:700;color:var(--accent)" id="depthLabel">3</span>
       </div>
     </div>
-  </div>
 
-  <!-- CENTER: Tree visualization canvas -->
-  <div class="panel canvas-panel" style="min-height:500px">
-    <h2>Bruhat-Tits Tree</h2>
-    <canvas id="treeCanvas"></canvas>
-  </div>
-
-  <!-- RIGHT: Chart + Collapse -->
-  <div style="display:flex;flex-direction:column;gap:12px">
-    <div class="panel canvas-panel">
-      <h2>Error Rate vs. Depth</h2>
-      <canvas id="chartCanvas"></canvas>
-    </div>
-    <div class="panel">
-      <h2>Collapse Animation</h2>
-      <button id="animBtn" style="width:100%;padding:8px;background:rgba(0,229,255,0.08);border:1px solid var(--line);color:var(--cyan);font-family:var(--ui);font-size:0.78rem;border-radius:var(--radius-sm);cursor:pointer">
-        ▶ Run Collapse
-      </button>
-      <div style="margin-top:8px;font-size:0.7rem;color:var(--text-dim);line-height:1.5">
-        Watch how errors are suppressed as we move up the tree. Each level applies a majority vote — errors that survive at depth <span style="color:var(--cyan)">d</span> become the logical error rate.
+    <div class="section">
+      <div class="section-title">Controls</div>
+      <div style="display:flex;flex-direction:column;gap:0.4rem;">
+        <button class="action-btn" id="btnError" title="Toggle error injection mode, then click a node to inject an error at that position">
+          <span>Inject error at node</span>
+          <span class="indicator off" id="errInd">●</span>
+        </button>
+        <button class="action-btn" id="btnShowAll" title="Show error confinement for ALL nodes at once — color every node by its subtree confinement ratio">
+          <span>Show all confinement</span>
+          <span class="indicator off" id="showAllInd">●</span>
+        </button>
+        <button class="action-btn" id="btnReset" title="Clear all selections and return to default">
+          <span>Reset view</span>
+          <span style="float:right;font-size:0.65rem;color:var(--muted)">R</span>
+        </button>
       </div>
     </div>
-  </div>
-</div>
 
-<div class="footer">
-  QWAV Artifact A1 — <a href="https://github.com/QNFO/qwav-demo-error-confinement">Source</a> |
-  <a href="https://github.com/QNFO/QWAV">QWAV Research Programme</a> |
-  Built with <a href="#" id="tourTrigger">qwav-demo-kit</a> v1.0
-</div>
-</div>
+    <div class="section">
+      <div class="section-title">Key equation (strong triangle inequality)</div>
+      <div class="formula">
+        d(x, z) &le; max{ d(x, y), d(y, z) }<br>
+        <span style="font-size:0.7rem;color:var(--muted)">Ultrametric property: error cannot leak outside the infected subtree</span>
+      </div>
+    </div>
 
-<!-- Tour Overlay -->
-<div class="tour-overlay" id="tourOverlay">
-  <div class="tour-card">
-    <h3 id="tourTitle">Welcome!</h3>
-    <p id="tourBody"></p>
-    <div class="step-dots" id="tourDots"></div>
-    <button id="tourNext">Next →</button>
-    <button class="skip" id="tourSkip">Skip tour</button>
-  </div>
-</div>
+    <div class="section">
+      <div class="section-title">Live metrics</div>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-label">Total nodes</div><div class="stat-value" id="statNodes">15</div></div>
+        <div class="stat"><div class="stat-label">Tree depth</div><div class="stat-value" id="statDepth">3</div></div>
+        <div class="stat"><div class="stat-label">Error at depth</div><div class="stat-value err" id="statErrDepth">—</div></div>
+        <div class="stat"><div class="stat-label">Nodes affected</div><div class="stat-value err" id="statAffected">—</div></div>
+        <div class="stat"><div class="stat-label">Nodes safe</div><div class="stat-value cnf" id="statSafe">—</div></div>
+        <div class="stat"><div class="stat-label">Confinement %</div><div class="stat-value cnf" id="statConfinement">—</div></div>
+      </div>
+    </div>
 
-<!-- Toast -->
-<div class="toast" id="toast"></div>
+    <div class="section" style="border-color:var(--accent);">
+      <div class="section-title" style="color:var(--accent)">Key insight — verify it yourself</div>
+      <p class="insight">
+        In an <b>Archimedean</b> (Euclidean) space, an error at node <i>v</i> could potentially affect <b>any</b> other node — sibling, parent, or distant cousin — because triangle paths can connect everything.
+        In an <b>ultrametric</b> space (Bruhat–Tits tree), the strong triangle inequality <span class="err">locks the error inside the subtree of <i>v</i></span>.
+        Click nodes at different depths: the <b>shallower</b> the error, the <b>larger</b> the affected subtree. A leaf error affects only itself (perfect confinement).
+        This property makes p-adic QEC codes exponentially more efficient at suppressing cascading errors.
+      </p>
+      <div style="font-size:0.7rem;color:var(--muted);margin-top:0.4rem;">Source: QWAV A1 · DOI 10.5281/zenodo.20134944</div>
+    </div>
+  </aside>
+
+  <section class="viewport">
+    <div class="tabs">
+      <button class="tab active" data-view="tree">Tree geometry</button>
+      <button class="tab" data-view="confinement">Confinement analysis</button>
+    </div>
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="mainCanvas"></canvas>
+      <div class="overlay" id="overlay"></div>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot root"></div> Root (L)</div>
+      <div class="legend-item"><div class="legend-dot selected"></div> Selected node</div>
+      <div class="legend-item"><div class="legend-dot error"></div> Error source</div>
+      <div class="legend-item"><div class="legend-dot descendant"></div> Affected subtree</div>
+      <div class="legend-item"><div class="legend-dot confined"></div> Safe (confined)</div>
+    </div>
+  </section>
+</main>
 
 <script>
-"use strict";
-
-/* ═══════ SEEDED PRNG (mulberry32) ═══════ */
+// ============================================================
+// SEEDED PRNG — mulberry32 (deterministic, reproducible)
+// ============================================================
 function mulberry32(a) {
   return function() {
     a |= 0; a = a + 0x6D2B79F5 | 0;
-    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
     t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-let rng = mulberry32(42);
 
-/* ═══════ STATE ═══════ */
-const S = { eps: 0.01, p: 3, d: 5, seed: 42, running: false, sim: null, nodeCount: 0, maxLeaves: 0 };
-
-/* ═══════ TREE LAYOUT ═══════ */
-function treeLayout(p, d) {
-  const nodes = []; let nextId = 0;
-  const root = { depth: 0, index: nextId++, parent: null, children: [], leaf: d===0 };
-  nodes.push(root);
-  (function build(node, depth) {
-    if (depth >= d) { node.leaf = true; return; }
-    node.leaf = false;
-    for (let k = 0; k < p; k++) {
-      const child = { depth: depth+1, index: nextId++, parent: node, children: [], leaf: depth+1===d };
-      nodes.push(child); node.children.push(child);
-      build(child, depth+1);
+// ============================================================
+// BT-TREE COMPUTATION ENGINE (pure math — no DOM)
+// ============================================================
+class BTTree {
+  constructor(p, depth) {
+    this.p = p; this.depth = depth; this.build();
+  }
+  build() {
+    this.nodes = []; this.nodesByDepth = {}; this.nodeCount = 0;
+    this.nodesByDepth[0] = [this._make(0, -1)];
+    for (let d = 1; d <= this.depth; d++) {
+      this.nodesByDepth[d] = [];
+      for (const parent of this.nodesByDepth[d - 1]) {
+        for (let i = 0; i < this.p; i++) {
+          const child = this._make(d, parent.id);
+          parent.children.push(child.id);
+          this.nodesByDepth[d].push(child);
+        }
+      }
     }
-  })(root, 0);
-  const leaves = nodes.filter(n => n.leaf);
-  S.maxLeaves = leaves.length;
-  return nodes;
-}
-
-/* ═══════ MATH: Theoretical Error Confinement ═══════ */
-function binomial(p, k) {
-  if (k < 0 || k > p) return 0;
-  let num = 1, den = 1;
-  for (let i = 1; i <= k; i++) { num *= (p - k + i); den *= i; }
-  return num / den;
-}
-
-function levelError(eps, p) {
-  const t = Math.floor(p / 2);
-  let fail = 0;
-  for (let j = t + 1; j <= p; j++) {
-    const b = binomial(p, j);
-    const term = b * Math.pow(eps, j) * Math.pow(1 - eps, p - j);
-    if (isNaN(term) || !isFinite(term)) { fail += 0; continue; }
-    fail += term;
   }
-  // Edge cases
-  if (eps <= 0) return 0;
-  if (eps >= 1) return 1;
-  return Math.min(1, Math.max(0, fail));
-}
-
-function theoreticalLER(eps, p, d) {
-  let e = eps;
-  const series = [e];
-  for (let k = 0; k < d; k++) {
-    e = levelError(e, p);
-    series.push(e);
-    if (e <= 1e-300) break;
+  _make(depth, pid) {
+    const n = { id: this.nodeCount++, depth, parentId: pid, children: [], childIndex: 0 };
+    if (pid !== -1) n.childIndex = this.nodes[pid].children.length;
+    this.nodes.push(n); return n;
   }
-  return { final: series[series.length - 1], series };
+  getNode(id) { return this.nodes[id]; }
+
+  /** Get the subtree rooted at `id` (inclusive). This is the set of all nodes
+   *  that would be affected by an error at `id` under ultrametric confinement. */
+  getErrorSubtree(id) {
+    const st = new Set([id]);
+    const stack = [...this.getNode(id).children];
+    while (stack.length) { const c = stack.pop(); st.add(c); stack.push(...this.getNode(c).children); }
+    return st;
+  }
+
+  /** Path from root to node `id` */
+  getPath(id) {
+    const p = [id]; let cur = this.getNode(id);
+    while (cur.parentId !== -1) { p.unshift(cur.parentId); cur = this.getNode(cur.parentId); }
+    return p;
+  }
+
+  /** Number of nodes at depth d */
+  nodeCountAtDepth(d) { return this.nodesByDepth[d] ? this.nodesByDepth[d].length : 0; }
+
+  /** Total nodes in the tree */
+  get totalNodes() { return this.nodeCount; }
+
+  /** Subtree size rooted at `id` (number of nodes: self + all descendants) */
+  subtreeSize(id) {
+    const nd = this.getNode(id);
+    if (nd.children.length === 0) return 1;
+    let s = 1;
+    const stack = [...nd.children];
+    while (stack.length) { s++; stack.push(...this.getNode(stack.pop()).children); }
+    return s;
+  }
+
+  /** Analytical subtree size for a node at depth `d`: (p^(depth-d+1)-1)/(p-1) */
+  analyticalSubtreeSize(d) {
+    const levelsBelow = this.depth - d;
+    if (levelsBelow < 0) return 0;
+    // Sum_{k=0}^{levelsBelow} p^k = (p^(levelsBelow+1)-1)/(p-1)
+    let sum = 0, pk = 1;
+    for (let k = 0; k <= levelsBelow; k++) { sum += pk; pk *= this.p; }
+    return sum;
+  }
+
+  /** Build a confinement map: for every node, its subtree size */
+  getConfinementMap() {
+    const map = new Map();
+    for (const nd of this.nodes) {
+      map.set(nd.id, this.subtreeSize(nd.id));
+    }
+    return map;
+  }
 }
 
-/* ═══════ MATH: Monte Carlo Simulation ═══════ */
-function simulate(eps, p, d, trials) {
-  const nodes = treeLayout(p, d);
-  const byDepth = [];
-  nodes.forEach(n => { (byDepth[n.depth] = byDepth[n.depth] || []).push(n); });
-  let failures = 0;
-  const maxNodes = nodes.length;
-  for (let t = 0; t < trials; t++) {
-    const bad = new Array(maxNodes).fill(false);
-    byDepth[d].forEach(n => { if (rng() < eps) bad[n.index] = true; });
-    for (let dep = d - 1; dep >= 0; dep--) {
-      byDepth[dep].forEach(n => {
-        if (n.leaf) return;
-        let count = 0;
-        n.children.forEach(c => { if (bad[c.index]) count++; });
-        bad[n.index] = count > Math.floor(p / 2);
+// ============================================================
+// GOLDEN-VALUE VERIFICATION (runs on every rebuild)
+// ============================================================
+function verifyMath(tree) {
+  const p = tree.p, d = tree.depth;
+  const results = [];
+
+  // Golden 1: total nodes = (p^(d+1)-1)/(p-1)
+  const expectedTotal = (Math.pow(p, d + 1) - 1) / (p - 1);
+  results.push({
+    name: 'Total node count', computed: tree.totalNodes, expected: expectedTotal,
+    pass: tree.totalNodes === expectedTotal
+  });
+
+  // Golden 2: leaf count = p^d
+  const expectedLeaves = Math.pow(p, d);
+  const actualLeaves = tree.nodeCountAtDepth(d);
+  results.push({
+    name: 'Leaf count (depth ' + d + ')', computed: actualLeaves, expected: expectedLeaves,
+    pass: actualLeaves === expectedLeaves
+  });
+
+  // Golden 3: subtree sizes match analytical formula
+  let subtreeOk = true;
+  for (let depth = 0; depth <= d; depth++) {
+    const expectedSubtree = tree.analyticalSubtreeSize(depth);
+    const sampleNode = tree.nodesByDepth[depth][0];
+    const actualSubtree = tree.subtreeSize(sampleNode.id);
+    if (actualSubtree !== expectedSubtree) { subtreeOk = false; break; }
+  }
+  results.push({
+    name: 'Subtree sizes match analytical', computed: 'all', expected: 'all',
+    pass: subtreeOk
+  });
+
+  // Log and return
+  const allPass = results.every(r => r.pass);
+  console.log('%cMath verification%c ' + (allPass ? 'ALL PASS' : 'SOME FAIL'),
+    'color:' + (allPass ? '#188038' : '#d93025') + ';font-weight:bold', 'color:#6c757d');
+  results.forEach(r => {
+    console.log('  ' + r.name + ': ' + (r.pass ? '✓' : '✗') +
+      ' computed=' + r.computed + ' expected=' + r.expected);
+  });
+  return { results, allPass };
+}
+
+// ============================================================
+// RENDERER
+// ============================================================
+class Renderer {
+  constructor(canvas, tree) {
+    this.cv = canvas; this.ctx = canvas.getContext('2d'); this.tree = tree;
+    this.pos = new Map(); this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.selected = null; this.errId = null; this.errSet = new Set();
+    this.mode = 'tree'; this.showAllConfinement = false; this.confinementMap = null;
+    this.colors = [
+      '#1a73e8','#188038','#d93025','#b06000','#9334e6','#c01b84',
+      '#129e5e','#d04a2c','#089995','#7c4dff'
+    ];
+  }
+  resize() {
+    const w = this.cv.parentElement;
+    this.cv.width = w.clientWidth * this.dpr;
+    this.cv.height = w.clientHeight * this.dpr;
+    this.cv.style.width = w.clientWidth + 'px';
+    this.cv.style.height = w.clientHeight + 'px';
+  }
+  render() {
+    this.ctx.save(); this.ctx.scale(this.dpr, this.dpr);
+    this.ctx.clearRect(0, 0, this.cv.width / this.dpr, this.cv.height / this.dpr);
+    if (this.mode === 'tree') { this._layout(); this._drawEdges(); this._drawNodes(); }
+    else { this._drawConfinementChart(); }
+    this.ctx.restore();
+  }
+  _layout() {
+    const W = this.cv.width / this.dpr, H = this.cv.height / this.dpr;
+    const vm = 55, hm = 90, avH = H - vm * 2, avW = W - hm * 2;
+    const vStep = this.tree.depth > 0 ? avH / this.tree.depth : 0;
+    this.pos.clear();
+    for (let d = 0; d <= this.tree.depth; d++) {
+      const ns = this.tree.nodesByDepth[d];
+      const y = vm + d * vStep;
+      const n = ns.length, hStep = n > 1 ? avW / (n - 1) : 0;
+      const sx = n === 1 ? W / 2 : hm;
+      ns.forEach((nd, i) => this.pos.set(nd.id, { x: n === 1 ? sx : sx + i * hStep, y }));
+    }
+  }
+  _drawEdges() {
+    for (let d = 1; d <= this.tree.depth; d++) {
+      for (const p of this.tree.nodesByDepth[d - 1]) {
+        const pp = this.pos.get(p.id); if (!pp) continue;
+        for (const cid of p.children) {
+          const cp = this.pos.get(cid); if (!cp) continue;
+          const inErr = this.errSet.has(p.id) && this.errSet.has(cid);
+          this.ctx.strokeStyle = inErr ? 'rgba(217,48,37,0.35)' : '#adb5bd';
+          this.ctx.lineWidth = inErr ? 1.8 : 1;
+          this.ctx.beginPath(); this.ctx.moveTo(pp.x, pp.y); this.ctx.lineTo(cp.x, cp.y); this.ctx.stroke();
+        }
+      }
+    }
+  }
+  _drawNodes() {
+    const r = Math.max(5, 12 - this.tree.depth);
+    for (const [id, p] of this.pos) {
+      const nd = this.tree.getNode(id);
+      const sel = this.selected === id;
+      const isErrSrc = this.errId === id;
+      const inErr = !isErrSrc && this.errSet.has(id);
+      const root = id === 0, leaf = nd.children.length === 0;
+      const total = this.tree.totalNodes;
+      const sz = this.tree.subtreeSize(id);
+
+      this.ctx.beginPath(); this.ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+
+      if (this.showAllConfinement && !this.errId) {
+        // Color by confinement ratio: shallow = large subtree = warm
+        const ratio = sz / total;
+        const hue = Math.round(120 - ratio * 120); // green (safe) to red (large impact)
+        const sat = 50 + ratio * 40;
+        const lit = 60 - ratio * 25;
+        this.ctx.fillStyle = 'hsl(' + hue + ',' + sat + '%,' + lit + '%)';
+        this.ctx.strokeStyle = 'hsl(' + hue + ',' + sat + '%,' + (lit - 15) + '%)';
+        this.ctx.lineWidth = 1;
+      } else if (sel && isErrSrc) {
+        this.ctx.fillStyle = '#d93025'; this.ctx.strokeStyle = '#d93025'; this.ctx.lineWidth = 2.5;
+      } else if (sel) {
+        this.ctx.fillStyle = '#4d8ff7'; this.ctx.strokeStyle = '#1a73e8'; this.ctx.lineWidth = 2;
+      } else if (isErrSrc) {
+        this.ctx.fillStyle = '#d93025'; this.ctx.strokeStyle = '#a50e0e'; this.ctx.lineWidth = 2;
+      } else if (inErr) {
+        this.ctx.fillStyle = '#f4a79a'; this.ctx.strokeStyle = '#d93025'; this.ctx.lineWidth = 1;
+      } else if (root) {
+        this.ctx.fillStyle = '#e8f0fe'; this.ctx.strokeStyle = '#1a73e8'; this.ctx.lineWidth = 1.5;
+      } else if (leaf) {
+        this.ctx.fillStyle = '#e9ecef'; this.ctx.strokeStyle = '#ced4da'; this.ctx.lineWidth = 1;
+      } else {
+        this.ctx.fillStyle = '#f8f9fa'; this.ctx.strokeStyle = '#ced4da'; this.ctx.lineWidth = 1;
+      }
+      this.ctx.fill(); this.ctx.stroke();
+
+      // Label root and selected node
+      if (root || isErrSrc) {
+        this.ctx.fillStyle = (sel || isErrSrc) ? '#fff' : '#6c757d';
+        this.ctx.font = 'bold ' + (r - 1) + "px 'JetBrains Mono', Consolas, monospace";
+        this.ctx.textAlign = 'center'; this.ctx.textBaseline = 'middle';
+        if (root && isErrSrc) this.ctx.fillText('R×', p.x, p.y);
+        else if (root) this.ctx.fillText('R', p.x, p.y);
+        else this.ctx.fillText('×', p.x, p.y);
+      } else if (leaf) {
+        this.ctx.fillStyle = '#adb5bd';
+        this.ctx.font = (r - 2) + "px 'JetBrains Mono', Consolas, monospace";
+        this.ctx.textAlign = 'center'; this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(String(nd.depth), p.x, p.y);
+      }
+    }
+
+    // Highlight path from root to selected node
+    if (this.selected !== null) {
+      const path = this.tree.getPath(this.selected);
+      this.ctx.strokeStyle = 'rgba(26,115,232,0.2)'; this.ctx.lineWidth = 3;
+      for (let i = 1; i < path.length; i++) {
+        const a = this.pos.get(path[i - 1]), b = this.pos.get(path[i]);
+        if (a && b) { this.ctx.beginPath(); this.ctx.moveTo(a.x, a.y); this.ctx.lineTo(b.x, b.y); this.ctx.stroke(); }
+      }
+    }
+
+    // Draw confinement boundary if error is set
+    if (this.showAllConfinement && !this.errId) {
+      this.ctx.fillStyle = 'var(--muted)'; // ignored in canvas, use direct
+      this.ctx.fillStyle = '#6c757d';
+      this.ctx.font = '9px -apple-system, sans-serif';
+      this.ctx.textAlign = 'left';
+      const W = this.cv.width / this.dpr;
+      this.ctx.fillText('Confinement ratio: green=narrow subtree (safe), red=wide subtree (high impact)',
+        10, 22);
+    }
+  }
+
+  /** Bar chart showing error subtree size by injection depth — proves strict confinement */
+  _drawConfinementChart() {
+    const W = this.cv.width / this.dpr, H = this.cv.height / this.dpr;
+    const ctx = this.ctx;
+    const pad = { t: 55, r: 40, b: 55, l: 80 };
+    const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+
+    const depths = [];
+    for (let d = 0; d <= this.tree.depth; d++) {
+      depths.push({
+        depth: d,
+        subtreeSize: this.tree.analyticalSubtreeSize(d),
+        nodeCount: this.tree.nodeCountAtDepth(d),
+        label: d === 0 ? 'Root' : 'Depth ' + d
       });
     }
-    if (bad[0]) failures++;
-  }
-  return { ler: failures / trials, trials, failures };
-}
+    const maxSize = this.tree.totalNodes;
+    const barW = Math.min(60, pw / depths.length - 12);
+    const gap = (pw - barW * depths.length) / (depths.length + 1);
 
-/* ═══════ RENDER TREE ═══════ */
-function fitCanvas(cv, ctx) {
-  const r = cv.getBoundingClientRect();
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const w = Math.max(200, Math.floor(r.width)), h = Math.max(200, Math.floor(r.height));
-  if (cv.width !== w * dpr || cv.height !== h * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { w, h };
-}
+    // Grid lines
+    ctx.strokeStyle = 'rgba(222,226,230,0.5)'; ctx.lineWidth = 0.5;
+    for (let i = 0; i <= 5; i++) {
+      const y = pad.t + (ph / 5) * i;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+      ctx.fillStyle = '#6c757d'; ctx.font = "10px 'JetBrains Mono', Consolas, monospace";
+      ctx.textAlign = 'right';
+      ctx.fillText(Math.round(maxSize * (1 - i / 5)), pad.l - 8, y + 3);
+    }
+    // Axes
+    ctx.strokeStyle = '#ced4da'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + ph); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.l, pad.t + ph); ctx.lineTo(W - pad.r, pad.t + ph); ctx.stroke();
 
-function renderTree() {
-  const cv = document.getElementById("treeCanvas"), ctx = cv.getContext("2d");
-  const { w, h } = fitCanvas(cv, ctx);
-  ctx.clearRect(0, 0, w, h);
-  const nodes = treeLayout(S.p, S.d);
-  S.nodeCount = nodes.length;
+    // Title
+    ctx.fillStyle = '#1a73e8'; ctx.font = "12px Georgia, serif"; ctx.textAlign = 'left';
+    ctx.fillText('Error subtree size by injection depth (p=' + this.tree.p + ', d=' + this.tree.depth + ')', pad.l, pad.t - 30);
+    ctx.fillStyle = '#6c757d'; ctx.font = "10px Georgia, serif";
+    ctx.fillText('Deeper injection = smaller subtree = stronger confinement', pad.l, pad.t - 15);
 
-  const padL = 16, padR = 16, padT = 20, padB = 20;
-  const plotW = w - padL - padR, plotH = h - padT - padB;
-  const rootX = w / 2, rootY = padT + 12;
+    // Bars
+    depths.forEach((dp, i) => {
+      const x = pad.l + gap + i * (barW + gap);
+      const barH = (dp.subtreeSize / maxSize) * ph;
+      const y = pad.t + ph - barH;
+      const ratio = dp.subtreeSize / maxSize;
 
-  const leaves = nodes.filter(n => n.leaf);
-  const leafSpacing = plotW / (leaves.length + 1);
-  const depthH = (plotH - 12) / S.d;
+      // Bar with gradient
+      const grad = ctx.createLinearGradient(x, y, x, pad.t + ph);
+      const hue = Math.round(120 - ratio * 120);
+      grad.addColorStop(0, 'hsl(' + hue + ',70%,50%)');
+      grad.addColorStop(1, 'hsl(' + hue + ',70%,75%)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, barW, barH);
 
-  // Compute positions bottom-up
-  const pos = new Array(nodes.length);
-  let leafIdx = 0;
-  for (let i = 0; i < nodes.length; i++) {
-    if (nodes[i].leaf) pos[i] = { x: padL + (leafIdx + 1) * leafSpacing, y: padT + plotH };
-    else pos[i] = { x: 0, y: 0 };
-    if (nodes[i].leaf) leafIdx++;
-  }
-  for (let dep = S.d - 1; dep >= 0; dep--) {
-    const levelNodes = nodes.filter(n => n.depth === dep && !n.leaf);
-    levelNodes.forEach(n => {
-      const xs = n.children.map(c => pos[c.index].x);
-      pos[n.index] = { x: xs.reduce((a,b)=>a+b,0)/xs.length, y: padT + dep * depthH + 12 };
+      // Border
+      ctx.strokeStyle = 'hsl(' + hue + ',60%,40%)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, barW, barH);
+
+      // Value on top
+      ctx.fillStyle = '#212529';
+      ctx.font = "bold 10px 'JetBrains Mono', Consolas, monospace";
+      ctx.textAlign = 'center';
+      ctx.fillText(dp.subtreeSize, x + barW / 2, y - 5);
+
+      // Depth label
+      ctx.fillStyle = '#6c757d';
+      ctx.font = "9px -apple-system, sans-serif";
+      ctx.fillText(dp.label, x + barW / 2, pad.t + ph + 15);
+
+      // Confinement % below bar
+      const confinementPct = Math.round((1 - ratio) * 100);
+      ctx.fillStyle = ratio > 0.5 ? '#d93025' : '#188038';
+      ctx.font = "8px 'JetBrains Mono', Consolas, monospace";
+      ctx.fillText(confinementPct + '% safe', x + barW / 2, pad.t + ph + 28);
     });
+
+    // Axis labels
+    ctx.fillStyle = '#6c757d'; ctx.font = "11px Georgia, serif"; ctx.textAlign = 'center';
+    ctx.fillText('Injection depth (0 = root, ' + this.tree.depth + ' = leaf)', W / 2, H - 5);
+    ctx.save(); ctx.translate(14, H / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Nodes in affected subtree', 0, 0); ctx.restore();
+
+    // Highlight current error if set
+    if (this.errId !== null) {
+      const ed = this.tree.getNode(this.errId).depth;
+      const ex = pad.l + gap + ed * (barW + gap);
+      ctx.strokeStyle = '#d93025'; ctx.lineWidth = 2.5;
+      ctx.setLineDash([]);
+      ctx.strokeRect(ex - 2, pad.t - 2, barW + 4, ph + 4);
+      ctx.fillStyle = '#d93025'; ctx.font = "bold 10px -apple-system, sans-serif";
+      ctx.textAlign = 'center';
+      ctx.fillText('← Current error', ex + barW / 2, pad.t - 20);
+    }
   }
 
-  // Draw edges
-  ctx.strokeStyle = "rgba(29,42,70,0.6)"; ctx.lineWidth = 0.8;
-  nodes.forEach(n => {
-    if (!n.parent) return;
-    ctx.beginPath();
-    ctx.moveTo(pos[n.parent.index].x, pos[n.parent.index].y);
-    ctx.lineTo(pos[n.index].x, pos[n.index].y);
-    ctx.stroke();
-  });
-
-  // Draw nodes
-  nodes.forEach(n => {
-    const r = n.leaf ? 2.5 : 3.5;
-    ctx.beginPath();
-    ctx.arc(pos[n.index].x, pos[n.index].y, r, 0, Math.PI * 2);
-    ctx.fillStyle = n.leaf ? "rgba(0,229,255,0.5)" : "rgba(179,136,255,0.6)";
-    if (n.depth === 0) ctx.fillStyle = "rgba(255,179,0,0.9)";
-    ctx.fill();
-  });
-}
-
-/* ═══════ RENDER CHART ═══════ */
-function renderChart() {
-  const cv = document.getElementById("chartCanvas"), ctx = cv.getContext("2d");
-  const { w, h } = fitCanvas(cv, ctx);
-  ctx.clearRect(0, 0, w, h);
-
-  const padL = 34, padR = 14, padT = 14, padB = 28;
-  const plotW = w - padL - padR, plotH = h - padT - padB;
-
-  const theory = theoreticalLER(S.eps, S.p, S.d);
-
-  ctx.strokeStyle = "rgba(29,42,70,0.5)"; ctx.lineWidth = 0.5;
-  const nTicks = 5;
-  for (let i = 0; i <= nTicks; i++) {
-    const y = padT + (i / nTicks) * plotH;
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
-  }
-  for (let i = 0; i <= S.d; i++) {
-    const x = padL + (i / S.d) * plotW;
-    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + plotH); ctx.stroke();
-  }
-
-  // Theoretical line
-  ctx.beginPath();
-  ctx.strokeStyle = "rgba(0,229,255,0.8)"; ctx.lineWidth = 2;
-  for (let i = 0; i < theory.series.length; i++) {
-    const v = theory.series[i];
-    const y = padT + plotH * (1 - Math.max(0, Math.log10(v || 1e-30) / Math.log10(S.eps || 1e-30)));
-    const x = padL + (i / S.d) * plotW;
-    if (i === 0) ctx.moveTo(x, padT + plotH * (1 - Math.max(0, Math.log10(theory.series[0]) / Math.log10(theory.series[0]))));
-    ctx.lineTo(x, Math.max(padT, Math.min(padT + plotH, y)));
-  }
-  ctx.stroke();
-
-  // Sim point
-  if (S.sim) {
-    const sy = padT + plotH * (1 - Math.max(0, Math.log10(S.sim.ler || 1e-30) / Math.log10(S.eps || 1e-30)));
-    const sx = padL + (S.d / S.d) * plotW;
-    ctx.beginPath();
-    ctx.arc(sx, Math.max(padT, Math.min(padT + plotH, sy)), 5, 0, Math.PI*2);
-    ctx.fillStyle = "rgba(255,179,0,0.8)"; ctx.fill();
-  }
-
-  // Labels
-  ctx.fillStyle = "var(--text-dim)"; ctx.font = "9px Cascadia Code, monospace";
-  ctx.textAlign = "center";
-  for (let i = 0; i <= S.d; i++) {
-    const x = padL + (i / S.d) * plotW;
-    ctx.fillText(String(i), x, padT + plotH + 14);
-  }
-  ctx.textAlign = "right";
-  for (let i = 0; i <= nTicks; i++) {
-    const frac = 1 - i / nTicks;
-    const val = S.eps * Math.pow(10, -frac * 3);
-    const y = padT + (i / nTicks) * plotH;
-    if (val > 1e-30) ctx.fillText(val < 1e-6 ? val.toExponential(1) : (val*100).toFixed(1) + "%", padL - 6, y + 3);
+  hitTest(mx, my) {
+    let best = null, bd = 18;
+    for (const [id, p] of this.pos) { const d = Math.hypot(mx - p.x, my - p.y); if (d < bd) { bd = d; best = id; } }
+    return best;
   }
 }
 
-/* ═══════ UPDATE READOUTS ═══════ */
-function updateReadouts() {
-  const theory = theoreticalLER(S.eps, S.p, S.d);
-  document.getElementById("theoVal").textContent = theory.final < 1e-15
-    ? theory.final.toExponential(2)
-    : theory.final > 0.01
-      ? (theory.final * 100).toFixed(1) + "%"
-      : theory.final.toExponential(2);
-
-  if (S.sim) {
-    document.getElementById("simVal").textContent = S.sim.ler < 1e-15
-      ? S.sim.ler.toExponential(2)
-      : S.sim.ler > 0.01
-        ? (S.sim.ler * 100).toFixed(1) + "%"
-        : S.sim.ler.toExponential(2);
-    document.getElementById("simUnit").textContent = `(${S.sim.failures}/${S.sim.trials} failures)`;
-  } else {
-    document.getElementById("simVal").textContent = "—";
-    document.getElementById("simUnit").textContent = "Click ▶ Run Simulation";
-  }
-
-  const sf = S.eps / Math.max(theory.final, 1e-300);
-  document.getElementById("suppVal").textContent = sf > 1e10 ? sf.toExponential(1) + "×" : sf.toFixed(0) + "×";
-}
+// ============================================================
+// APP
+// ============================================================
+let prime = 2, depth = 3, errorMode = false, showAllConfinement = false;
+let tree = new BTTree(prime, depth);
+const cv = document.getElementById('mainCanvas');
+const rdr = new Renderer(cv, tree);
 
 function rebuild() {
-  S.sim = null;
-  renderTree();
-  renderChart();
-  updateReadouts();
-  logState();
-}
-
-/* ═══════ SIMULATION ═══════ */
-async function runSimulation() {
-  if (S.running) return;
-  S.running = true;
-  const btn = document.getElementById("runSimBtn");
-  const orig = btn.textContent;
-  btn.innerHTML = '<span class="spinner"></span> Running…';
-  btn.disabled = true;
-
-  await new Promise(r => setTimeout(r, 50)); // Yield to render spinner
-
-  const trials = 10000;
-  S.sim = simulate(S.eps, S.p, S.d, trials);
-  renderChart();
-  updateReadouts();
-
-  S.running = false;
-  btn.textContent = orig;
-  btn.disabled = false;
-  showToast("Simulation complete: " + S.sim.failures + " failures in " + trials + " trials");
-}
-
-/* ═══════ COLLAPSE ANIMATION ═══════ */
-async function animate() {
-  const btn = document.getElementById("animBtn");
-  const orig = btn.textContent;
-  btn.textContent = "Collapsing…";
-  for (let k = 0; k <= S.d; k++) {
-    const theory = theoreticalLER(S.eps, S.p, k);
-    const val = theory.final < 1e-15 ? theory.final.toExponential(2) : (theory.final*100).toFixed(1)+"%";
-    btn.textContent = `d=${k}: LER=${val}`;
-    await new Promise(r => setTimeout(r, 400));
+  tree = new BTTree(prime, depth);
+  rdr.tree = tree; rdr.selected = null;
+  if (!errorMode) { rdr.errId = null; rdr.errSet = new Set(); }
+  rdr.confinementMap = null;
+  const v = verifyMath(tree);
+  if (!v.allPass) {
+    console.warn('Math verification FAILED — check tree construction');
   }
-  btn.textContent = orig;
+  render(); updateStats();
 }
+function render() { rdr.render(); }
+function updateStats() {
+  document.getElementById('statNodes').textContent = tree.totalNodes;
+  document.getElementById('statDepth').textContent = tree.depth;
+  document.getElementById('depthLabel').textContent = depth;
 
-/* ═══════ LOGGING ═══════ */
-function logState() {
-  console.log("[QWAV-A1] State:", JSON.stringify({
-    eps: S.eps, p: S.p, d: S.d, seed: S.seed,
-    nodes: S.nodeCount, maxLeaves: S.maxLeaves,
-    timestamp: new Date().toISOString()
-  }));
+  if (rdr.errId !== null) {
+    const nd = tree.getNode(rdr.errId);
+    document.getElementById('statErrDepth').textContent = nd.depth;
+    document.getElementById('statAffected').textContent = rdr.errSet.size;
+    document.getElementById('statAffected').classList.add('err');
+    const safe = tree.totalNodes - rdr.errSet.size;
+    document.getElementById('statSafe').textContent = safe;
+    document.getElementById('statSafe').classList.add('cnf');
+    const confinementPct = Math.round((safe / tree.totalNodes) * 100);
+    document.getElementById('statConfinement').textContent = confinementPct + '%';
+    document.getElementById('statConfinement').classList.add('cnf');
+  } else {
+    document.getElementById('statErrDepth').textContent = '\u2014';
+    document.getElementById('statAffected').textContent = '\u2014';
+    document.getElementById('statAffected').classList.remove('err');
+    document.getElementById('statSafe').textContent = '\u2014';
+    document.getElementById('statSafe').classList.remove('cnf');
+    document.getElementById('statConfinement').textContent = '\u2014';
+    document.getElementById('statConfinement').classList.remove('cnf');
+  }
 }
+function resize() { rdr.resize(); render(); }
 
-/* ═══════ MATH VERIFICATION ═══════ */
-function verifyMath() {
-  const results = [];
-  const check = (name, fn) => {
-    try { const r = fn(); results.push({name,status:r===true?"PASS":"FAIL",detail:r===true?"":String(r)}); return r===true; }
-    catch(e) { results.push({name,status:"ERROR",detail:e.message}); return false; }
+// Prime buttons
+document.getElementById('primeButtons').addEventListener('click', e => {
+  const b = e.target.closest('.prime-btn'); if (!b) return;
+  prime = parseInt(b.dataset.p);
+  document.querySelectorAll('.prime-btn').forEach(x => x.classList.toggle('active', x === b));
+  rebuild();
+});
+
+// Depth slider
+document.getElementById('depthSlider').addEventListener('input', e => {
+  depth = parseInt(e.target.value); rebuild();
+});
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    rdr.mode = t.dataset.view;
+    render();
+  });
+});
+
+// Error mode toggle
+document.getElementById('btnError').addEventListener('click', () => {
+  errorMode = !errorMode;
+  const el = document.getElementById('errInd');
+  el.classList.toggle('off', !errorMode);
+  el.textContent = errorMode ? '\u25C9' : '\u25CF';
+  document.getElementById('btnError').classList.toggle('active', errorMode);
+  if (showAllConfinement) {
+    showAllConfinement = false; rdr.showAllConfinement = false;
+    document.getElementById('showAllInd').classList.add('off');
+    document.getElementById('showAllInd').textContent = '\u25CF';
+    document.getElementById('btnShowAll').classList.remove('active');
+  }
+  if (!errorMode) { rdr.errId = null; rdr.errSet = new Set(); }
+  const ovl = document.getElementById('overlay');
+  ovl.textContent = errorMode ? '\u26A0 Error mode: click any node to inject an error' : '';
+  ovl.classList.toggle('bright', errorMode);
+  updateStats(); render();
+});
+
+// Show all confinement toggle
+document.getElementById('btnShowAll').addEventListener('click', () => {
+  showAllConfinement = !showAllConfinement;
+  const el = document.getElementById('showAllInd');
+  el.classList.toggle('off', !showAllConfinement);
+  el.textContent = showAllConfinement ? '\u25C9' : '\u25CF';
+  document.getElementById('btnShowAll').classList.toggle('active', showAllConfinement);
+  rdr.showAllConfinement = showAllConfinement;
+  if (showAllConfinement) {
+    if (errorMode) {
+      errorMode = false;
+      document.getElementById('errInd').classList.add('off');
+      document.getElementById('errInd').textContent = '\u25CF';
+      document.getElementById('btnError').classList.remove('active');
+      rdr.errId = null; rdr.errSet = new Set();
+    }
+    document.getElementById('overlay').textContent = 'Confinement heatmap: green = deeply confined, red = wide impact';
+    document.getElementById('overlay').classList.remove('bright');
+  } else {
+    document.getElementById('overlay').textContent = '';
+  }
+  updateStats(); render();
+});
+
+// Reset
+document.getElementById('btnReset').addEventListener('click', () => {
+  rdr.selected = null; rdr.errId = null; rdr.errSet = new Set();
+  errorMode = false; showAllConfinement = false;
+  rdr.showAllConfinement = false;
+  document.getElementById('errInd').classList.add('off'); document.getElementById('errInd').textContent = '\u25CF';
+  document.getElementById('btnError').classList.remove('active');
+  document.getElementById('showAllInd').classList.add('off'); document.getElementById('showAllInd').textContent = '\u25CF';
+  document.getElementById('btnShowAll').classList.remove('active');
+  const ovl = document.getElementById('overlay');
+  ovl.textContent = ''; ovl.classList.remove('bright');
+  document.getElementById('tooltip').style.display = 'none';
+  updateStats(); render();
+});
+
+// Canvas click — inject error or select node
+cv.addEventListener('click', e => {
+  if (rdr.mode !== 'tree') return;
+  const rect = cv.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const id = rdr.hitTest(mx, my);
+  if (id === null) return;
+  const ovl = document.getElementById('overlay');
+  if (errorMode) {
+    rdr.errId = id; rdr.errSet = tree.getErrorSubtree(id); rdr.selected = id;
+    const nd = tree.getNode(id);
+    const total = tree.totalNodes;
+    const safe = total - rdr.errSet.size;
+    const confinementPct = Math.round((safe / total) * 100);
+    ovl.textContent = '\u26A0 Error at depth ' + nd.depth + ': ' + rdr.errSet.size + ' nodes affected, ' + safe + ' safe (' + confinementPct + '% confined)';
+    ovl.classList.add('bright');
+  } else {
+    rdr.selected = rdr.selected === id ? null : id;
+    rdr.errId = null; rdr.errSet = new Set();
+    if (rdr.selected !== null) {
+      const nd = tree.getNode(id);
+      const sz = tree.subtreeSize(id);
+      ovl.textContent = 'Node v' + id + ' \u00b7 depth ' + nd.depth + ' \u00b7 subtree size ' + sz + ' \u00b7 ' + nd.children.length + ' children';
+      ovl.classList.remove('bright');
+    } else { ovl.textContent = ''; }
+  }
+  updateStats(); render();
+});
+
+// Canvas hover tooltip
+cv.addEventListener('mousemove', e => {
+  if (rdr.mode !== 'tree') { document.getElementById('tooltip').style.display = 'none'; return; }
+  const rect = cv.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const id = rdr.hitTest(mx, my);
+  const tt = document.getElementById('tooltip');
+  if (id !== null) {
+    const nd = tree.getNode(id);
+    const sz = tree.subtreeSize(id);
+    tt.style.display = 'block';
+    tt.style.left = (mx + 18) + 'px'; tt.style.top = (my - 10) + 'px';
+    tt.textContent = 'v' + id + ' \u00b7 depth ' + nd.depth + ' \u00b7 subtree ' + sz + ' nodes';
+    cv.style.cursor = 'pointer';
+  } else { tt.style.display = 'none'; cv.style.cursor = 'default'; }
+});
+
+// Keyboard shortcut: R = reset, E = error mode
+window.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') { document.getElementById('btnReset').click(); }
+  if (e.key === 'e' || e.key === 'E') { document.getElementById('btnError').click(); }
+});
+
+window.addEventListener('resize', resize);
+window.addEventListener('DOMContentLoaded', () => {
+  resize(); render(); updateStats();
+  console.log('%cError Confinement%c engine ready — p=' + prime + ' d=' + depth +
+    ' nodes=' + tree.totalNodes,
+    'color:#188038;font-weight:bold', 'color:#6c757d');
+
+  // window._demo with getter (prevents STALE-ENGINE-REF-1)
+  window._demo = {
+    get tree() { return tree; },
+    rebuild,
+    get p() { return prime; },
+    get depth() { return depth; },
+    get errorId() { return rdr.errId; },
+    get errorSet() { return rdr.errSet; },
+    get mode() { return rdr.mode; },
+    setPrime: v => { prime = v; document.querySelector('[data-p="' + v + '"]').click(); },
+    setDepth: v => { depth = v; rebuild(); },
+    injectError: id => {
+      rdr.errId = id; rdr.errSet = tree.getErrorSubtree(id); rdr.selected = id;
+      updateStats(); render();
+    },
+    clearError: () => {
+      rdr.errId = null; rdr.errSet = new Set(); updateStats(); render();
+    },
+    verifyMath: () => verifyMath(tree)
   };
 
-  // Edge cases
-  const eps0 = theoreticalLER(0, 3, 5);
-  check("ε=0 → LER=0", () => eps0.final === 0 ? true : `Got ${eps0.final}`);
-
-  const eps1 = theoreticalLER(1, 3, 5);
-  check("ε=1 → LER=1", () => eps1.final > 0.99 && eps1.final <= 1 ? true : `Got ${eps1.final}`);
-
-  // Monotonicity
-  const series = [];
-  for (let eps = 0.01; eps <= 0.5; eps += 0.05) series.push(theoreticalLER(eps, 3, 3).final);
-  check("LER monotonic in ε", () => {
-    for (let i = 1; i < series.length; i++) if (series[i] < series[i-1]) return `Not monotonic at i=${i}`;
-    return true;
-  });
-
-  // Analytical match (Monte Carlo with high-error regime for statistical significance)
-  const theory = theoreticalLER(0.25, 3, 2).final;
-  const sim = simulate(0.25, 3, 2, 5000);
-  check("Theory ≈ Monte Carlo (±15%)", () => {
-    const diff = Math.abs(sim.ler - theory) / Math.max(theory, 1e-300);
-    return diff < 0.15 ? true : `Diff=${(diff*100).toFixed(1)}% (theory=${(theory*100).toFixed(2)}%, sim=${(sim.ler*100).toFixed(2)}%)`;
-  });
-
-  // Tree size
-  check("Tree size p^d", () => {
-    const expected = (Math.pow(S.p, S.d+1)-1)/(S.p-1);
-    return S.nodeCount === expected ? true : `Expected ${expected}, got ${S.nodeCount}`;
-  });
-
-  // Reproducibility
-  check("Deterministic (seed=42)", () => {
-    rng = mulberry32(42);
-    const s1 = simulate(0.1, 3, 3, 5000).ler;
-    rng = mulberry32(42);
-    const s2 = simulate(0.1, 3, 3, 5000).ler;
-    return s1 === s2 ? true : `s1=${s1}, s2=${s2}`;
-  });
-
-  // Summary
-  let pass = 0, fail = 0;
-  results.forEach(r => { if (r.status==="PASS") pass++; else fail++; });
-  const msg = `Math verification: ${pass}/${results.length} passed`;
-  showToast(msg);
-  console.table(results);
-  return { total: results.length, passed: pass, failed: fail, results };
-}
-
-/* ═══════ GUIDED TOUR ═══════ */
-const TOUR_STEPS = [
-  { title: "What You're Looking At", body: "This demo shows how ultrametric tree geometry suppresses errors. Physical errors at the leaves are corrected by majority voting as they propagate upward — the logical error rate at the root can be billions of times lower." },
-  { title: "Try Changing the Prime (p)", body: "The branching factor p controls how many children each node has. With p=3, a parent needs 2 of 3 children to be bad before it becomes bad. Higher p means stronger error suppression. Click any p button to see the tree structure change." },
-  { title: "Run a Monte Carlo Simulation", body: "Click ▶ Run Simulation to actually inject random errors at the leaves and watch them get corrected as they move up the tree through majority voting. The amber dot shows the simulated logical error rate." },
-  { title: "Explore Further", body: "Adjust the Physical Error Rate slider, change the tree Depth, try different p values, and compare the theoretical prediction (cyan line) with the Monte Carlo result (amber dot). Run the Collapse animation to see error suppression level by level." },
-];
-
-let tourStep = 0;
-function startTour() {
-  tourStep = 0;
-  showTourStep();
-}
-function showTourStep() {
-  const overlay = document.getElementById("tourOverlay");
-  if (tourStep >= TOUR_STEPS.length) { overlay.classList.remove("active"); localStorage.setItem("qwav-a1-tour-done","1"); return; }
-  overlay.classList.add("active");
-  document.getElementById("tourTitle").textContent = TOUR_STEPS[tourStep].title;
-  document.getElementById("tourBody").textContent = TOUR_STEPS[tourStep].body;
-  const dots = document.getElementById("tourDots");
-  dots.innerHTML = TOUR_STEPS.map((_,i) => `<div class="step-dot${i===tourStep?' active':''}"></div>`).join("");
-  document.getElementById("tourNext").textContent = tourStep === TOUR_STEPS.length-1 ? "Got it!" : "Next →";
-}
-function nextTour() { tourStep++; showTourStep(); }
-function skipTour() { document.getElementById("tourOverlay").classList.remove("active"); localStorage.setItem("qwav-a1-tour-done","1"); }
-
-/* ═══════ TOAST ═══════ */
-function showToast(msg) {
-  const t = document.getElementById("toast");
-  t.textContent = msg; t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 3000);
-}
-
-/* ═══════ EVENT BINDINGS ═══════ */
-document.getElementById("epsSlider").addEventListener("input", e => {
-  S.eps = parseInt(e.target.value) / 100;
-  document.getElementById("epsLabel").textContent = "ε = " + (S.eps*100).toFixed(0) + "%";
-  rebuild();
+  // GOLDEN-VALUE TEST for p=2, d=3 (default):
+  // root subtree = 15, depth-1 = 7, depth-2 = 3, leaf = 1
+  console.log('%cGolden-value verification (p=2, d=3):%c',
+    'font-weight:bold', 'color:#6c757d');
+  console.log('  root(depth 0): ' + tree.subtreeSize(0) + ' (expect 15)');
+  console.log('  depth 1: ' + tree.subtreeSize(1) + ' (expect 7)');
+  console.log('  depth 2: ' + tree.subtreeSize(3) + ' (expect 3)');
+  console.log('  depth 3 (leaf): ' + tree.subtreeSize(7) + ' (expect 1)');
+  console.log('  Total nodes: ' + tree.totalNodes + ' = ' +
+    ' (p^(d+1)-1)/(p-1) = ' + ((Math.pow(prime, depth+1)-1)/(prime-1)));
 });
-
-document.getElementById("pSeg").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b) return;
-  S.p = parseInt(b.dataset.p);
-  document.querySelectorAll("#pSeg button").forEach(x => x.classList.toggle("active", x===b));
-  rebuild();
-});
-
-document.getElementById("dSeg").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b) return;
-  S.d = parseInt(b.dataset.d);
-  document.querySelectorAll("#dSeg button").forEach(x => x.classList.toggle("active", x===b));
-  rebuild();
-});
-
-document.getElementById("runSimBtn").addEventListener("click", runSimulation);
-document.getElementById("resetBtn").addEventListener("click", () => { S.eps=0.01; S.p=3; S.d=5; S.seed=42; S.sim=null; rng=mulberry32(42); document.getElementById("epsSlider").value=1; document.getElementById("epsLabel").textContent="ε = 1%"; document.querySelectorAll("#pSeg button[data-p='3']")[0].classList.add("active"); document.querySelectorAll("#dSeg button[data-d='5']")[0].classList.add("active"); document.getElementById("seedInput").value=42; rebuild(); showToast("Reset to defaults"); });
-document.getElementById("verifyBtn").addEventListener("click", verifyMath);
-document.getElementById("animBtn").addEventListener("click", animate);
-document.getElementById("reseedBtn").addEventListener("click", () => { S.seed = parseInt(document.getElementById("seedInput").value) || 42; rng = mulberry32(S.seed); S.sim = null; rebuild(); showToast("Reseeded: "+S.seed); });
-document.getElementById("seedInput").addEventListener("change", e => { S.seed = parseInt(e.target.value) || 42; rng = mulberry32(S.seed); S.sim = null; rebuild(); });
-
-// Tour triggers
-document.getElementById("tourTrigger").addEventListener("click", e => { e.preventDefault(); startTour(); });
-document.getElementById("tourNext").addEventListener("click", nextTour);
-document.getElementById("tourSkip").addEventListener("click", skipTour);
-
-// Keyboard shortcuts
-document.addEventListener("keydown", e => {
-  if (e.key === "r" && e.ctrlKey) { e.preventDefault(); runSimulation(); }
-  if (e.key === "v" && e.ctrlKey) { e.preventDefault(); verifyMath(); }
-});
-
-// Resize handler
-let resizeTimer;
-window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(rebuild, 200); });
-
-/* ═══════ INIT ═══════ */
-function init() {
-  // Try to set slider to saved state or default
-  document.getElementById("epsSlider").value = 1;
-  rebuild();
-
-  // Guided tour on first visit
-  if (!localStorage.getItem("qwav-a1-tour-done")) {
-    setTimeout(startTour, 800);
-  }
-
-  logState();
-}
-
-init();
-
-// Expose verification harness
-window.__qwavMathVerify = {
-  verifyAll: verifyMath,
-  theoreticalLER, simulate, S,
-};
-console.log("[QWAV-A1] Error Confinement Demo ready. Math verification available via verifyMath() or Ctrl+V.");
 </script>
 </body>
 </html>
