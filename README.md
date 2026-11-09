@@ -1,3 +1,5 @@
+> **Archived 2026-11-09 (REPO-CONSOLIDATION-1).** This repository is read-only. Its content now lives in QNFO/qwav-demos, folder `qwav-demo-error-confinement/` (full history). Plan: rwnq8/agent-operating-system `REPOSITORIES.md`.
+
 # Error Confinement — Ultrametric Error Suppression Live Demo
 
 **Status:** LIVE
